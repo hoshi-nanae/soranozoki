@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="そらのぞき">
+<meta name="theme-color" content="#0f1328">
+<meta name="robots" content="noindex">
+<title>そらのぞき</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+:root{
+  --bg:#0f1328; --panel:#161c38; --panel2:#1d2549; --line:#2b3564;
+  --ink:#ece7d6; --muted:#9aa3c4; --star:#f2c86b;
+  --ok:#86e0a8; --hide:#ff9e6e; --out:#86a6ff; --below:#4a5378;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.65 "Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+  padding-bottom:calc(env(safe-area-inset-bottom) + 24px)}
+button,input,select{font:inherit;color:inherit}
+.stick{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe-area-inset-top)}
+.top{display:flex;align-items:center;gap:10px;padding:8px 14px}
+h1{margin:0;font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  font-size:19px;font-weight:700;color:var(--star);letter-spacing:.08em;white-space:nowrap}
+#siteSel{margin-left:auto;max-width:55%;background:var(--panel2);border:1px solid var(--line);
+  border-radius:999px;padding:6px 12px}
+.panoWrap{position:relative}
+.scroller{height:clamp(200px,40vh,430px);overflow:auto;-webkit-overflow-scrolling:touch;
+  background:#070a1c;overscroll-behavior:contain}
+#pano{display:block;touch-action:pan-x pan-y}
+.zoom{position:absolute;right:10px;bottom:10px;display:flex;gap:6px}
+.zoom button{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+  background:rgba(10,14,34,.75);font-size:20px;line-height:1}
+.panoMsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:20px;pointer-events:none;color:var(--ink);font-size:14px}
+.panoMsg span{background:rgba(10,14,34,.8);padding:10px 14px;border-radius:12px;max-width:340px}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;background:none;border:0;padding:10px 4px;color:var(--muted);
+  border-bottom:2px solid transparent;font-size:14px}
+.tabs button[aria-selected="true"]{color:var(--star);border-bottom-color:var(--star)}
+main{padding:12px 14px;max-width:720px;margin:0 auto}
+[hidden]{display:none!important}
+h2{font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  font-size:16px;margin:0 0 6px;font-weight:700}
+.block{padding:14px 0;border-bottom:1px solid var(--line)}
+.block:last-child{border-bottom:0}
+.note{color:var(--muted);font-size:13px;margin:6px 0}
+label{display:block;font-size:13px;color:var(--muted);margin:8px 0}
+label input:not([type=checkbox]):not([type=range]),label select{display:block;width:100%;margin-top:4px}
+input:not([type=checkbox]):not([type=range]),select{background:var(--panel2);border:1px solid var(--line);
+  border-radius:10px;padding:9px 11px;min-height:42px}
+input[type=range]{width:100%;accent-color:var(--star)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn,button.btn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:9px 14px;min-height:42px;margin:4px 6px 4px 0}
+.btn.primary{background:var(--star);color:#1a1606;border-color:var(--star);font-weight:700}
+.btn.on{border-color:var(--star);color:var(--star)}
+.btn.danger{color:#ffb3a0;border-color:#5a2f3a}
+.btn:disabled{opacity:.4}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:4px 0}
+.seg button{background:none;border:0;padding:8px 14px;min-height:40px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--panel2);color:var(--star)}
+.seg button:disabled{opacity:.35}
+.timeRow{display:flex;align-items:center;gap:12px}
+.timeRow input{width:auto}
+#timeOut{font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  font-size:24px;color:var(--star);font-variant-numeric:tabular-nums}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.quick button{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px}
+.viewOpts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:10px 0}
+.viewOpts label{display:flex;align-items:center;gap:6px;margin:0;color:var(--ink)}
+.tapInfo{background:var(--panel);border-radius:10px;padding:8px 12px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);
+  border-radius:999px;padding:5px 12px;font-size:13px}
+.chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.chip.add{color:var(--star);border-style:dashed}
+.card{background:var(--panel);border-radius:14px;padding:12px 14px;margin:10px 0}
+.cardHead{display:flex;align-items:baseline;gap:8px}
+.cardHead h3{margin:0;font-size:16px}
+.cardHead .sub{color:var(--muted);font-size:12px}
+.cardHead .rm{margin-left:auto;background:none;border:0;color:var(--muted);font-size:18px;padding:0 4px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;transform:translateY(-1px)}
+.now{margin:4px 0;font-size:14px}
+.st{font-weight:700}
+.st-2{color:var(--ok)} .st-1{color:var(--hide)} .st-0{color:var(--muted)} .st-3{color:var(--out)} .st-4{color:var(--ok)}
+.tl{display:block;width:100%;height:50px;margin-top:6px}
+.win{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin:4px 0}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+.refRow{background:var(--panel);border-radius:12px;padding:10px 12px;margin:8px 0}
+.refHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.refNum{width:24px;height:24px;border-radius:50%;background:#64d8e8;color:#0b1a20;display:inline-flex;
+  align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.refTruth{margin:4px 0 0;font-size:13px}
+.result{background:var(--panel);border-radius:10px;padding:8px 12px;font-size:13px}
+#siteList{list-style:none;padding:0;margin:6px 0}
+#siteList li{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+#siteList li button{margin-left:auto}
+#siteList li.cur{color:var(--star)}
+.addRow{display:flex;gap:8px;margin-top:8px}
+.addRow input{flex:1}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(4,6,16,.6);display:flex;align-items:flex-end}
+.sheetBody{background:var(--bg);width:100%;max-height:82vh;overflow:auto;border-radius:18px 18px 0 0;
+  padding:14px 16px calc(env(safe-area-inset-bottom) + 20px);border-top:1px solid var(--line)}
+.sheetTop{display:flex;align-items:center;gap:8px;position:sticky;top:-14px;background:var(--bg);padding:6px 0}
+.sheetTop input{flex:1}
+.catH{color:var(--muted);font-size:12px;margin:14px 0 4px}
+.pickItem{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);
+  color:var(--ink);font-size:15px;margin:0}
+.pickItem small{color:var(--muted)}
+.pickItem input{width:20px;height:20px;accent-color:var(--star)}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%);
+  background:#262f5c;color:var(--ink);padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;
+  max-width:90vw;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+:focus-visible{outline:2px solid var(--star);outline-offset:2px}
+.arEntry{background:var(--panel);border-radius:14px;padding:12px 14px;margin:0 0 12px}
+.arEntry .btn{width:100%;margin:0}
+.arEntry .note{margin:8px 0 0}
+#ar{position:fixed;inset:0;z-index:50;background:#000;overflow:hidden;touch-action:none}
+#arVideo,#arCanvas{position:absolute;inset:0;width:100%;height:100%}
+#arVideo{object-fit:cover}
+.arTop{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:8px;
+  padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+#arDir{flex:1;text-align:center;font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  color:var(--star);font-size:15px;text-shadow:0 1px 3px #000}
+.arBtn{background:rgba(10,14,34,.7);border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  padding:8px 14px;min-height:40px;color:var(--ink)}
+.arBtn.on{border-color:var(--star);color:var(--star)}
+.arHint{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);margin:0;
+  text-align:center;font-size:13px;color:var(--ink);text-shadow:0 1px 3px #000}
+.arHint:empty{display:none}
+.arPanel{position:absolute;left:0;right:0;bottom:0;background:rgba(10,14,34,.9);
+  padding:12px 14px calc(env(safe-area-inset-bottom) + 12px);border-radius:16px 16px 0 0}
+.arPanel p{margin:0 0 8px;font-size:14px}
+.arPanel label{color:var(--ink)}
+.arCands{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.arCands:empty{display:none}
+.arPanel .row{display:flex;gap:8px;justify-content:flex-end}
+</style>
+</head>
+<body>
+<div class="stick">
+  <header class="top">
+    <h1>そらのぞき</h1>
+    <select id="siteSel" aria-label="観測地"></select>
+  </header>
+  <div class="panoWrap">
+    <div id="scroller" class="scroller"><canvas id="pano"></canvas></div>
+    <div class="zoom"><button id="zOut" aria-label="縮小">−</button><button id="zIn" aria-label="拡大">＋</button></div>
+    <div id="panoMsg" class="panoMsg" hidden><span></span></div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button data-tab="sky" role="tab">空を見る</button>
+    <button data-tab="cal" role="tab">位置合わせ</button>
+    <button data-tab="sil" role="tab">シルエット</button>
+    <button data-tab="site" role="tab">観測地</button>
+  </nav>
+</div>
+
+<main>
+<!-- 空を見る -->
+<section id="tab-sky">
+  <div class="arEntry">
+    <button class="btn primary" id="arBtn">iPhoneをかざして見る</button>
+    <p class="note">カメラの映像に、今いる場所・今の時刻の星座線と惑星を重ねます。</p>
+  </div>
+  <div class="timeRow"><input type="date" id="dateIn" aria-label="日付"><output id="timeOut"></output></div>
+  <input type="range" id="timeSlider" min="0" max="1440" step="5" aria-label="時刻（正午から翌日の正午まで）">
+  <div class="quick">
+    <button data-q="now">今</button><button data-q="sunset">日の入り</button><button data-q="dark">暗くなる</button>
+    <button data-q="m60">−1時間</button><button data-q="p60">＋1時間</button>
+  </div>
+  <p id="sunLine" class="note"></p>
+  <div class="viewOpts">
+    <div class="seg" id="modeSeg"><button data-m="photo">写真</button><button data-m="sil">シルエット</button></div>
+    <label><input type="checkbox" id="optGrid" checked>方角と高さ</label>
+    <label><input type="checkbox" id="optPath" checked>一晩の動き</label>
+  </div>
+  <p id="tapInfo" class="tapInfo" hidden></p>
+  <div class="chips" id="chips"></div>
+  <div class="legend">
+    <span style="--c:var(--ok)">見える</span><span style="--c:var(--hide)">障害物のかげ</span>
+    <span style="--c:var(--out)">写真の範囲外</span><span style="--c:var(--below)">地平線の下</span>
+  </div>
+  <div id="cards"></div>
+</section>
+
+<!-- 位置合わせ -->
+<section id="tab-cal" hidden>
+  <div class="block">
+    <h2>観測地</h2>
+    <label>名前<input id="siteName" autocomplete="off"></label>
+    <div class="row2">
+      <label>緯度<input id="lat" inputmode="decimal" placeholder="例：26.2124"></label>
+      <label>経度<input id="lon" inputmode="decimal" placeholder="例：127.6809"></label>
+    </div>
+    <button class="btn" id="geoBtn">現在地を使う</button>
+    <p class="note">座標と写真は、このiPhoneの中にだけ保存されます。</p>
+  </div>
+  <div class="block">
+    <h2>パノラマ写真</h2>
+    <button class="btn primary" id="photoBtn">写真を選ぶ</button>
+    <div><div class="seg" id="projSeg"><button data-p="cyl">iPhoneのパノラマ</button><button data-p="equi">360°写真</button></div></div>
+    <label>撮影日時<input type="datetime-local" id="photoTime"></label>
+    <p class="note">太陽や月を目印にするときに使います。写真に記録があれば自動で入ります。</p>
+  </div>
+  <div class="block">
+    <h2>方角を合わせる</h2>
+    <p class="note">写真の中の目印を2か所タップして、それぞれの本当の方角を教えます。太陽や月が写っていれば、それを選ぶだけで方角と高さが自動で決まります。地上の目印を使うときは、地図アプリで方角を調べて入力してください（北0°・東90°・南180°・西270°）。</p>
+    <div id="refRows"></div>
+    <label id="widthRow">写真の横の範囲（度）<input id="widthDeg" inputmode="decimal" placeholder="目印が1つだけのとき。例：240"></label>
+    <p id="calResult" class="result"></p>
+  </div>
+  <div class="block">
+    <h2>水平線を合わせる</h2>
+    <p class="note">写真の上の黄色い線の両端にある丸を上下に動かして、本当の水平（海の水平線や遠くの平らな地面）に合わせます。</p>
+    <button class="btn" id="hzAuto">太陽・月の高さから合わせる</button>
+    <button class="btn" id="hzReset">線を真ん中に戻す</button>
+  </div>
+</section>
+
+<!-- シルエット -->
+<section id="tab-sil" hidden>
+  <div class="block">
+    <h2>シルエットを作る</h2>
+    <p class="note">写真から空と地上の境目を読み取って、緑の線にします。写真が消えても、この線があれば障害物の判定はそのまま使えます。うまく取れないところは指でなぞって直せます。</p>
+    <button class="btn primary" id="silAuto">写真から自動で作る</button>
+    <label>読み取りの感度（境目が上すぎるときは右へ、下すぎるときは左へ）<input type="range" id="silTh" min="8" max="120" value="40"></label>
+    <button class="btn" id="silTrace">指でなぞって直す</button>
+    <button class="btn" id="silUndo">元に戻す</button>
+    <button class="btn danger" id="silClear">シルエットを消す</button>
+    <p class="note" id="silNote"></p>
+  </div>
+</section>
+
+<!-- 観測地 -->
+<section id="tab-site" hidden>
+  <div class="block">
+    <h2>観測地の一覧</h2>
+    <ul id="siteList"></ul>
+    <div class="addRow"><input id="newName" placeholder="例：自宅のベランダ" aria-label="新しい観測地の名前"><button class="btn primary" id="addSite">追加</button></div>
+  </div>
+  <div class="block">
+    <h2>観測地データの保存</h2>
+    <p class="note">緯度経度・位置合わせ・シルエットを小さなファイルにまとめます。写真は入りません。iCloud Driveに保存しておくと、アプリのデータが消えても読み込むだけで元に戻せます。</p>
+    <button class="btn" id="exportBtn">観測地データを書き出す</button>
+    <button class="btn" id="importBtn">観測地データを読み込む</button>
+  </div>
+  <div class="block">
+    <h2>写真が消えたときは</h2>
+    <p class="note">シルエットがあれば、そのまま「空を見る」で使えます。「位置合わせ」で同じ写真を選び直すと、合わせた位置はそのままで写真表示に戻ります。</p>
+    <p class="note" id="storageNote"></p>
+  </div>
+  <div class="block">
+    <button class="btn danger" id="delPhoto">この観測地の写真を削除</button>
+    <button class="btn danger" id="delSite">この観測地を削除</button>
+  </div>
+</section>
+</main>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="sheetBody">
+    <div class="sheetTop"><input id="pickSearch" placeholder="天体を探す" aria-label="天体を探す"><button class="btn primary" id="sheetClose">閉じる</button></div>
+    <div id="pickList"></div>
+    <div class="block">
+      <h2>天体を追加する</h2>
+      <p class="note">彗星などは、赤経・赤緯（2000年分点）を入れて追加できます。</p>
+      <label>名前<input id="cName" placeholder="例：〇〇彗星"></label>
+      <div class="row2">
+        <label>赤経（時 分）<input id="cRa" placeholder="例：5 35.3"></label>
+        <label>赤緯（度）<input id="cDec" inputmode="decimal" placeholder="例：-5.39"></label>
+      </div>
+      <button class="btn" id="cAdd">追加する</button>
+    </div>
+  </div>
+</div>
+<div id="ar" hidden>
+  <video id="arVideo" playsinline muted autoplay></video>
+  <canvas id="arCanvas"></canvas>
+  <div class="arTop">
+    <button class="arBtn" id="arClose">閉じる</button>
+    <output id="arDir"></output>
+    <button class="arBtn" id="arFix">ずれを直す</button>
+  </div>
+  <p id="arHint" class="arHint"></p>
+  <div id="arPanel" class="arPanel" hidden>
+    <p id="arMsg"></p>
+    <div id="arCands" class="arCands"></div>
+    <label>線の大きさ<input type="range" id="arScale" min="70" max="140" step="1" value="100"></label>
+    <div class="row"><button class="arBtn" id="arReset">補正を消す</button><button class="arBtn" id="arDone">終わる</button></div>
+  </div>
+</div>
+<div id="toast" hidden></div>
+<input type="file" id="photoFile" accept="image/*" hidden>
+<input type="file" id="jsonFile" accept=".json,application/json" hidden>
+
+<script id="astro">
+/* ---------- 天体位置の計算（画面に関係しない部分） ---------- */
+const Astro = (() => {
+  const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+  const norm360 = a => ((a % 360) + 360) % 360;
+  const jd = d => d.getTime() / 86400000 + 2440587.5;
+  const gmst = J => { const T = (J - 2451545) / 36525; return norm360(280.46061837 + 360.98564736629 * (J - 2451545) + 0.000387933 * T * T); };
+  // JPL近似軌道要素（J2000, 1800–2050年）: a, da, e, de, I, dI, L, dL, 近日点黄経, d, 昇交点黄経, d
+  const EL = {
+    mercury: [0.38709927, 0.00000037, 0.20563593, 0.00001906, 7.00497902, -0.00594749, 252.25032350, 149472.67411175, 77.45779628, 0.16047689, 48.33076593, -0.12534081],
+    venus:   [0.72333566, 0.00000390, 0.00677672, -0.00004107, 3.39467605, -0.00078890, 181.97909950, 58517.81538729, 131.60246718, 0.00268329, 76.67984255, -0.27769418],
+    earth:   [1.00000261, 0.00000562, 0.01671123, -0.00004392, -0.00001531, -0.01294668, 100.46457166, 35999.37244981, 102.93768193, 0.32327364, 0, 0],
+    mars:    [1.52371034, 0.00001847, 0.09339410, 0.00007882, 1.84969142, -0.00813131, -4.55343205, 19140.30268499, -23.94362959, 0.44441088, 49.55953891, -0.29257343],
+    jupiter: [5.20288700, -0.00011607, 0.04838624, -0.00013253, 1.30439695, -0.00183714, 34.39644051, 3034.74612775, 14.72847983, 0.21252668, 100.47390909, 0.20469106],
+    saturn:  [9.53667594, -0.00125060, 0.05386179, -0.00050991, 2.48599187, 0.00193609, 49.95424423, 1222.49362201, 92.59887831, -0.41897216, 113.66242448, -0.28867794],
+    uranus:  [19.18916464, -0.00196176, 0.04725744, -0.00004397, 0.77263783, -0.00242939, 313.23810451, 428.48202785, 170.95427630, 0.40805281, 74.01692503, 0.04240589],
+    neptune: [30.06992276, 0.00026291, 0.00859048, 0.00005105, 1.77004347, 0.00035372, -55.12002969, 218.45945325, 44.96476227, -0.32241464, 131.78422574, -0.00508664]
+  };
+  function kepler(M, e) {
+    let E = M + e * Math.sin(M) * (1 + e * Math.cos(M));
+    for (let i = 0; i < 10; i++) E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    return E;
+  }
+  function helio(name, T) {
+    const p = EL[name];
+    const a = p[0] + p[1] * T, e = p[2] + p[3] * T, I = (p[4] + p[5] * T) * D2R;
+    const L = p[6] + p[7] * T, w = p[8] + p[9] * T, O = p[10] + p[11] * T;
+    let M = norm360(L - w); if (M > 180) M -= 360;
+    const E = kepler(M * D2R, e);
+    const xp = a * (Math.cos(E) - e), yp = a * Math.sqrt(1 - e * e) * Math.sin(E);
+    const om = (w - O) * D2R, Or = O * D2R;
+    const co = Math.cos(om), so = Math.sin(om), cO = Math.cos(Or), sO = Math.sin(Or), cI = Math.cos(I), sI = Math.sin(I);
+    return [
+      (co * cO - so * sO * cI) * xp + (-so * cO - co * sO * cI) * yp,
+      (co * sO + so * cO * cI) * xp + (-so * sO + co * cO * cI) * yp,
+      (so * sI) * xp + (co * sI) * yp
+    ];
+  }
+  function eclToEq(v, epsDeg) {
+    const c = Math.cos(epsDeg * D2R), s = Math.sin(epsDeg * D2R);
+    return [v[0], v[1] * c - v[2] * s, v[1] * s + v[2] * c];
+  }
+  function radec(v) {
+    const r = Math.hypot(v[0], v[1], v[2]);
+    return { ra: norm360(Math.atan2(v[1], v[0]) * R2D), dec: Math.asin(v[2] / r) * R2D, r };
+  }
+  function precess(ra, dec, T) { // J2000 → その日の分点
+    const as = x => x / 3600 * D2R;
+    const z0 = as(2306.2181 * T + 0.30188 * T * T + 0.017998 * T * T * T);
+    const z = as(2306.2181 * T + 1.09468 * T * T + 0.018203 * T * T * T);
+    const th = as(2004.3109 * T - 0.42665 * T * T - 0.041833 * T * T * T);
+    const a = ra * D2R, d = dec * D2R;
+    const A = Math.cos(d) * Math.sin(a + z0);
+    const B = Math.cos(th) * Math.cos(d) * Math.cos(a + z0) - Math.sin(th) * Math.sin(d);
+    const C = Math.sin(th) * Math.cos(d) * Math.cos(a + z0) + Math.cos(th) * Math.sin(d);
+    return { ra: norm360((Math.atan2(A, B) + z) * R2D), dec: Math.asin(C) * R2D };
+  }
+  function moonEq(J) { // Schlyter の方法（主な摂動項つき）
+    const d = J - 2451543.5;
+    const s = x => Math.sin(x * D2R), c = x => Math.cos(x * D2R);
+    const N = norm360(125.1228 - 0.0529538083 * d), i = 5.1454, w = norm360(318.0634 + 0.1643573223 * d);
+    const a = 60.2666, e = 0.054900, M = norm360(115.3654 + 13.0649929509 * d);
+    const E = kepler(M * D2R, e);
+    const xv = a * (Math.cos(E) - e), yv = a * Math.sqrt(1 - e * e) * Math.sin(E);
+    const v = Math.atan2(yv, xv) * R2D; let r = Math.hypot(xv, yv);
+    const xh = r * (c(N) * c(v + w) - s(N) * s(v + w) * c(i));
+    const yh = r * (s(N) * c(v + w) + c(N) * s(v + w) * c(i));
+    const zh = r * s(v + w) * s(i);
+    let lon = Math.atan2(yh, xh) * R2D, lat = Math.atan2(zh, Math.hypot(xh, yh)) * R2D;
+    const Ms = norm360(356.0470 + 0.9856002585 * d), ws = 282.9404 + 4.70935e-5 * d, Ls = norm360(Ms + ws);
+    const Lm = norm360(M + w + N), D = norm360(Lm - Ls), F = norm360(Lm - N);
+    lon += -1.274 * s(M - 2 * D) + 0.658 * s(2 * D) - 0.186 * s(Ms) - 0.059 * s(2 * M - 2 * D)
+      - 0.057 * s(M - 2 * D + Ms) + 0.053 * s(M + 2 * D) + 0.046 * s(2 * D - Ms) + 0.041 * s(M - Ms)
+      - 0.035 * s(D) - 0.031 * s(M + Ms) - 0.015 * s(2 * F - 2 * D) + 0.011 * s(M - 4 * D);
+    lat += -0.173 * s(F - 2 * D) - 0.055 * s(M - F - 2 * D) - 0.046 * s(M + F - 2 * D) + 0.033 * s(F + 2 * D) + 0.017 * s(2 * M + F);
+    r += -0.58 * c(M - 2 * D) - 0.46 * c(2 * D);
+    const ecl = 23.4393 - 3.563e-7 * d;
+    const q = radec(eclToEq([r * c(lat) * c(lon), r * c(lat) * s(lon), r * s(lat)], ecl));
+    return { ra: q.ra, dec: q.dec, distER: r };
+  }
+  function equatorial(obj, J) {
+    const T = (J - 2451545) / 36525;
+    if (obj.kind === 'moon') return moonEq(J);
+    let ra, dec;
+    if (obj.kind === 'fixed') { ra = obj.ra; dec = obj.dec; }
+    else {
+      const ea = helio('earth', T); let v;
+      if (obj.kind === 'sun') v = [-ea[0], -ea[1], -ea[2]];
+      else { const p = helio(obj.id, T); v = [p[0] - ea[0], p[1] - ea[1], p[2] - ea[2]]; }
+      const q = radec(eclToEq(v, 23.43928)); ra = q.ra; dec = q.dec;
+    }
+    return precess(ra, dec, T);
+  }
+  function horizontal(eq, J, lat, lon) {
+    const lst = norm360(gmst(J) + lon);
+    let H = (lst - eq.ra) * D2R, dec = eq.dec * D2R; const phi = lat * D2R;
+    if (eq.distER) { // 月の視差（観測地から見た位置）
+      const r = eq.distER;
+      let X = r * Math.cos(dec) * Math.cos(H), Y = r * Math.cos(dec) * Math.sin(H), Z = r * Math.sin(dec);
+      X -= Math.cos(phi); Z -= Math.sin(phi);
+      H = Math.atan2(Y, X); dec = Math.atan2(Z, Math.hypot(X, Y));
+    }
+    const sa = Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H);
+    const trueAlt = Math.asin(Math.max(-1, Math.min(1, sa))) * R2D;
+    const az = norm360(Math.atan2(-Math.cos(dec) * Math.sin(H), Math.cos(phi) * Math.sin(dec) - Math.sin(phi) * Math.cos(dec) * Math.cos(H)) * R2D);
+    let alt = trueAlt;
+    if (alt > -1.9) alt += 1.02 / Math.tan((alt + 10.3 / (alt + 5.11)) * D2R) / 60; // 大気差
+    return { az, alt, trueAlt };
+  }
+  function position(obj, date, lat, lon) {
+    const J = jd(date); const eq = equatorial(obj, J);
+    return Object.assign(horizontal(eq, J, lat, lon), { ra: eq.ra, dec: eq.dec });
+  }
+  function moonPhase(date) {
+    const J = jd(date);
+    const m = moonEq(J), s = equatorial({ kind: 'sun' }, J);
+    const cs = Math.sin(s.dec * D2R) * Math.sin(m.dec * D2R) + Math.cos(s.dec * D2R) * Math.cos(m.dec * D2R) * Math.cos((s.ra - m.ra) * D2R);
+    const elong = Math.acos(Math.max(-1, Math.min(1, cs))) * R2D;
+    return { illum: (1 - Math.cos(elong * D2R)) / 2, waxing: norm360(m.ra - s.ra) < 180, elong };
+  }
+  return { position, moonPhase, D2R, R2D, norm360 };
+})();
+</script>
+
+<script>
+/* ---------- 天体の一覧 ---------- */
+const FX = (id, name, sub, ra, dec, cat, color) => ({ id, name, sub, ra, dec, kind: 'fixed', cat, color });
+const CATALOG = [
+  { id: 'sun', name: '太陽', kind: 'sun', cat: '太陽系', color: '#ffd34d' },
+  { id: 'moon', name: '月', kind: 'moon', cat: '太陽系', color: '#f3efd6' },
+  { id: 'mercury', name: '水星', kind: 'planet', cat: '太陽系', color: '#cdbca4' },
+  { id: 'venus', name: '金星', kind: 'planet', cat: '太陽系', color: '#fff0b0' },
+  { id: 'mars', name: '火星', kind: 'planet', cat: '太陽系', color: '#ff8a65' },
+  { id: 'jupiter', name: '木星', kind: 'planet', cat: '太陽系', color: '#f1c98a' },
+  { id: 'saturn', name: '土星', kind: 'planet', cat: '太陽系', color: '#e9d48f' },
+  { id: 'uranus', name: '天王星', kind: 'planet', cat: '太陽系', color: '#a3e6e8' },
+  { id: 'neptune', name: '海王星', kind: 'planet', cat: '太陽系', color: '#8fa6ff' },
+  ...[
+    ['sirius', 'シリウス', 'おおいぬ座', 101.287, -16.716], ['canopus', 'カノープス', 'りゅうこつ座', 95.988, -52.696],
+    ['arcturus', 'アークトゥルス', 'うしかい座', 213.915, 19.182], ['vega', 'ベガ', 'こと座（織姫星）', 279.235, 38.784],
+    ['capella', 'カペラ', 'ぎょしゃ座', 79.172, 45.998], ['rigel', 'リゲル', 'オリオン座', 78.634, -8.202],
+    ['procyon', 'プロキオン', 'こいぬ座', 114.825, 5.225], ['betelgeuse', 'ベテルギウス', 'オリオン座', 88.793, 7.407],
+    ['achernar', 'アケルナル', 'エリダヌス座', 24.429, -57.237], ['altair', 'アルタイル', 'わし座（彦星）', 297.696, 8.868],
+    ['aldebaran', 'アルデバラン', 'おうし座', 68.980, 16.509], ['antares', 'アンタレス', 'さそり座', 247.352, -26.432],
+    ['spica', 'スピカ', 'おとめ座', 201.298, -11.161], ['pollux', 'ポルックス', 'ふたご座', 116.329, 28.026],
+    ['fomalhaut', 'フォーマルハウト', 'みなみのうお座', 344.413, -29.622], ['deneb', 'デネブ', 'はくちょう座', 310.358, 45.280],
+    ['regulus', 'レグルス', 'しし座', 152.093, 11.967], ['castor', 'カストル', 'ふたご座', 113.650, 31.888],
+    ['polaris', '北極星', 'こぐま座', 37.955, 89.264], ['dubhe', 'ドゥーベ', 'おおぐま座（北斗七星）', 165.932, 61.751],
+    ['mizar', 'ミザール', 'おおぐま座（北斗七星）', 200.981, 54.925], ['alkaid', 'アルカイド', 'おおぐま座（北斗七星）', 206.885, 49.313],
+    ['albireo', 'アルビレオ', 'はくちょう座', 292.680, 27.960], ['acrux', 'アクルックス', 'みなみじゅうじ座', 186.650, -63.099],
+    ['gacrux', 'ガクルックス', 'みなみじゅうじ座', 187.792, -57.113], ['mimosa', 'ミモザ', 'みなみじゅうじ座', 191.930, -59.689],
+    ['rigilkent', 'リギル・ケンタウルス', 'ケンタウルス座', 219.902, -60.834], ['hadar', 'ハダル', 'ケンタウルス座', 210.956, -60.373]
+  ].map(a => FX(a[0], a[1], a[2], a[3], a[4], '明るい星', '#ffffff')),
+  ...[
+    ['m45', 'すばる（M45）', 'おうし座', 56.75, 24.117], ['m42', 'オリオン大星雲（M42）', 'オリオン座', 83.82, -5.391],
+    ['m31', 'アンドロメダ銀河（M31）', 'アンドロメダ座', 10.685, 41.269], ['m13', '球状星団 M13', 'ヘルクレス座', 250.42, 36.461],
+    ['m8', '干潟星雲（M8）', 'いて座', 270.90, -24.38], ['m44', 'プレセペ星団（M44）', 'かに座', 130.10, 19.67],
+    ['dbl', '二重星団', 'ペルセウス座', 35.2, 57.13], ['m57', '環状星雲（M57）', 'こと座', 283.396, 33.029],
+    ['m27', '亜鈴状星雲（M27）', 'こぎつね座', 299.90, 22.72], ['omegacen', 'オメガ星団', 'ケンタウルス座', 201.70, -47.48],
+    ['gc', '天の川の中心', 'いて座', 266.417, -29.008]
+  ].map(a => FX(a[0], a[1], a[2], a[3], a[4], '星雲・星団など', '#c9adff'))
+];
+const CAT_BY_ID = Object.fromEntries(CATALOG.map(o => [o.id, o]));
+
+/* ---------- 便利関数 ---------- */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const { D2R, R2D, norm360 } = Astro;
+const DIR16 = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西'];
+const dirName = az => DIR16[Math.round(norm360(az) / 22.5) % 16];
+const pad2 = n => String(n).padStart(2, '0');
+const hm = d => `${d.getHours()}:${pad2(d.getMinutes())}`;
+const WD = '日月火水木金土';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const STEP = 5, STEPS = 1440 / STEP + 1;
+const PN = 600; // シルエットの列数
+function toast(msg, ms = 2800) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, ms);
+}
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+function localISO(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+
+/* ---------- 保存（このiPhoneの中だけ） ---------- */
+const DB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('soranozoki', 1);
+      r.onupgradeneeded = () => { const d = r.result; d.createObjectStore('sites', { keyPath: 'id' }); d.createObjectStore('photos'); d.createObjectStore('meta'); };
+      r.onsuccess = () => { this.db = r.result; res(); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  tx(store, mode, fn) {
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(store, mode); const req = fn(t.objectStore(store));
+      t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  },
+  get(s, k) { return this.tx(s, 'readonly', o => o.get(k)); },
+  all(s) { return this.tx(s, 'readonly', o => o.getAll()); },
+  put(s, v, k) { return this.tx(s, 'readwrite', o => k === undefined ? o.put(v) : o.put(v, k)); },
+  del(s, k) { return this.tx(s, 'readwrite', o => o.delete(k)); }
+};
+
+/* ---------- 状態 ---------- */
+const S = {
+  sites: [], site: null, photo: null, photoURL: null,
+  tab: 'sky', base: null, min: 0, zoom: 1,
+  selected: ['moon', 'venus', 'mars', 'jupiter', 'saturn'], custom: [],
+  mode: 'photo', grid: true, path: true,
+  pick: null, trace: false, undo: [], tap: null, tl: null, g: null, scale: 1, firstScroll: true, arScale: 100
+};
+const getObj = id => CAT_BY_ID[id] || S.custom.find(c => c.id === id);
+const saveMeta = debounce(() => DB.put('meta', {
+  siteId: S.site && S.site.id, selected: S.selected, custom: S.custom, mode: S.mode, grid: S.grid, path: S.path, arScale: S.arScale
+}, 'state'), 300);
+const saveSite = debounce(() => { if (S.site) { S.site.updated = Date.now(); DB.put('sites', S.site); } }, 300);
+const curTime = () => new Date(S.base.getTime() + S.min * 60000);
+const hasLoc = s => s && Number.isFinite(s.lat) && Number.isFinite(s.lon);
+
+function newSite(name) {
+  return {
+    id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name: name || '新しい観測地', lat: null, lon: null,
+    aspect: null, proj: 'cyl', photoTime: null,
+    refs: [{ type: 'sun', az: null, x: null, y: null }, { type: 'az', az: null, x: null, y: null }],
+    widthDeg: null, hz: null, hzManual: false, profile: null, updated: Date.now()
+  };
+}
+
+/* ---------- 写真の幾何（横＝方角、縦＝高さ） ---------- */
+// 座標は「写真の横幅＝1」の単位。y は写真の上端が0、下端が aspect。
+const gfun = (alt, proj) => proj === 'equi' ? alt * D2R : Math.tan(clamp(alt, -85, 85) * D2R);
+const ginv = (v, proj) => proj === 'equi' ? v * R2D : Math.atan(v) * R2D;
+const yh = (cal, x) => cal.yL + (cal.yR - cal.yL) * x;
+function azToX(cal, az) { const x = norm360(az - cal.az0) * D2R * cal.f; return x <= 1.0001 ? x : null; }
+function skyToXY(cal, proj, az, alt) { const x = azToX(cal, az); return x == null ? null : { x, y: yh(cal, x) - cal.f * gfun(alt, proj) }; }
+function xyToSky(cal, proj, x, y) { return { az: norm360(cal.az0 + x / cal.f * R2D), alt: ginv((yh(cal, x) - y) / cal.f, proj) }; }
+
+function refTruth(site, r) {
+  if (!r) return null;
+  if (r.type === 'az') return Number.isFinite(r.az) ? { az: r.az } : null;
+  const o = getObj(r.type);
+  if (!o || !site.photoTime || !hasLoc(site)) return null;
+  const p = Astro.position(o, new Date(site.photoTime), site.lat, site.lon);
+  return { az: p.az, alt: p.alt };
+}
+function fScale(site) { // 1ラジアンあたりの横幅と、左端の方角
+  const refs = site.refs.slice(0, site.proj === 'equi' ? 1 : 2)
+    .map(r => (r && r.x != null) ? Object.assign({ x: r.x, y: r.y }, refTruth(site, r) || {}) : null)
+    .filter(r => r && Number.isFinite(r.az));
+  if (site.proj === 'equi') {
+    if (!refs.length) return null;
+    const f = 1 / (2 * Math.PI); return { f, az0: norm360(refs[0].az - refs[0].x / f * R2D), refs };
+  }
+  if (refs.length >= 2) {
+    let [a, b] = refs; if (b.x < a.x) [a, b] = [b, a];
+    const dA = norm360(b.az - a.az);
+    if (dA < 2 || b.x - a.x < 0.01) return null;
+    const f = (b.x - a.x) / (dA * D2R); return { f, az0: norm360(a.az - a.x / f * R2D), refs };
+  }
+  if (refs.length === 1 && site.widthDeg > 10) {
+    const f = 1 / (site.widthDeg * D2R); return { f, az0: norm360(refs[0].az - refs[0].x / f * R2D), refs };
+  }
+  return null;
+}
+function computeCal(site) {
+  if (!site.aspect) return null;
+  const fs = fScale(site); if (!fs) return null;
+  const hz = site.hz || { yL: site.aspect / 2, yR: site.aspect / 2 };
+  return { f: fs.f, az0: fs.az0, yL: hz.yL, yR: hz.yR };
+}
+function autoHorizon(site) {
+  const fs = fScale(site); if (!fs) return false;
+  const pts = fs.refs.filter(r => Number.isFinite(r.alt)).map(r => ({ x: r.x, y: r.y + fs.f * gfun(r.alt, site.proj) }));
+  if (!pts.length) return false;
+  const cur = site.hz || { yL: site.aspect / 2, yR: site.aspect / 2 };
+  let slope = cur.yR - cur.yL;
+  if (pts.length >= 2 && Math.abs(pts[1].x - pts[0].x) > 0.02) slope = (pts[1].y - pts[0].y) / (pts[1].x - pts[0].x);
+  const yL = pts[0].y - slope * pts[0].x;
+  site.hz = { yL, yR: yL + slope }; return true;
+}
+function geom() {
+  const site = S.site; if (!site) return null;
+  if (!site.aspect) { // 写真なし：全周の簡易表示（北が左端）
+    return { virtual: true, proj: 'equi', aspect: 0.22, pad: 0, cal: { f: 1 / (2 * Math.PI), az0: 0, yL: 0.17, yR: 0.17 } };
+  }
+  const cal = computeCal(site); let pad = 0;
+  if (cal && S.tab === 'sky') {
+    const ytop = Math.min(cal.yL, cal.yR) - cal.f * gfun(60, site.proj);
+    pad = clamp(-ytop, 0, site.aspect * 1.2);
+  }
+  return { virtual: false, proj: site.proj, aspect: site.aspect, pad, cal };
+}
+function obstacle(site, g, az) {
+  const x = azToX(g.cal, az); if (x == null) return { covered: false };
+  if (g.virtual || !site.profile) return { covered: true, alt: 0 };
+  const i = clamp(Math.floor(x * site.profile.length), 0, site.profile.length - 1);
+  return { covered: true, alt: xyToSky(g.cal, g.proj, x, site.profile[i]).alt };
+}
+// 0 地平線の下 / 1 障害物のかげ / 2 見える / 3 写真の範囲外 / 4 地平線の上（障害物の情報なし）
+function statusCode(site, g, pos) {
+  if (!g || !g.cal) return pos.alt > 0 ? 4 : 0;
+  const o = obstacle(site, g, pos.az);
+  if (!o.covered) return pos.alt > 0 ? 3 : 0;
+  if (g.virtual || !site.profile) return pos.alt > 0 ? 4 : 0;
+  if (pos.alt > o.alt && pos.alt > -2) return 2;
+  return pos.alt < 0 ? 0 : 1;
+}
+const ST_TEXT = ['地平線の下', '障害物のかげ', '見える', '写真の範囲外', '地平線の上'];
+const ST_COLOR = ['#2e3556', '#ff9e6e', '#86e0a8', '#86a6ff', '#86e0a8'];
+
+/* ---------- パノラマの描画 ---------- */
+const cv = $('#pano'), sc = $('#scroller');
+function setMsg(t) { const m = $('#panoMsg'); m.hidden = !t; m.querySelector('span').textContent = t || ''; }
+function textOut(ctx, s, x, y, color, align = 'left', size = 13, weight = 600) {
+  ctx.font = `${weight} ${size}px "Hiragino Sans", system-ui, sans-serif`;
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(5,7,20,.85)'; ctx.lineJoin = 'round';
+  ctx.strokeText(s, x, y); ctx.fillStyle = color; ctx.fillText(s, x, y);
+}
+function render() {
+  const site = S.site, g = geom(); S.g = g;
+  if (!site) { cv.width = cv.height = 0; cv.style.width = cv.style.height = '0'; setMsg('「観測地」タブで観測地を追加してください'); return; }
+  const H = Math.round(sc.clientHeight * S.zoom) || 300;
+  const scale = H / (g.aspect + g.pad); S.scale = scale;
+  const Wc = Math.round(scale);
+  const fx = sc.scrollWidth > 0 ? (sc.scrollLeft + sc.clientWidth / 2) / sc.scrollWidth : 0.5;
+  const fy = sc.scrollHeight > 0 ? (sc.scrollTop + sc.clientHeight / 2) / sc.scrollHeight : 0.5;
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  while (Wc * H * dpr * dpr > 12e6 && dpr > 0.4) dpr *= 0.85;
+  const pw = Math.round(Wc * dpr), ph = Math.round(H * dpr);
+  if (cv.width !== pw || cv.height !== ph) {
+    cv.width = pw; cv.height = ph; cv.style.width = Wc + 'px'; cv.style.height = H + 'px';
+    if (S.firstScroll) {
+      S.firstScroll = false;
+      let x = 0.5; if (g.cal) { const sx = azToX(g.cal, 180); if (sx != null) x = sx; }
+      sc.scrollLeft = x * Wc - sc.clientWidth / 2; sc.scrollTop = H;
+    } else { sc.scrollLeft = fx * Wc - sc.clientWidth / 2; sc.scrollTop = fy * H - sc.clientHeight / 2; }
+  }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const X = u => u * scale, Y = u => (u + g.pad) * scale;
+
+  const grd = ctx.createLinearGradient(0, 0, 0, H);
+  grd.addColorStop(0, '#060918'); grd.addColorStop(1, '#22305a');
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, Wc, H);
+
+  const usePhoto = S.photo && (S.tab !== 'sky' || S.mode === 'photo' || !site.profile);
+  if (usePhoto) ctx.drawImage(S.photo, 0, Y(0), Wc, g.aspect * scale);
+  else if (site.profile && !g.virtual) {
+    ctx.beginPath(); ctx.moveTo(0, Y(site.profile[0]));
+    site.profile.forEach((y, i) => ctx.lineTo(X((i + 0.5) / site.profile.length), Y(y)));
+    ctx.lineTo(Wc, Y(site.profile[site.profile.length - 1])); ctx.lineTo(Wc, H); ctx.lineTo(0, H); ctx.closePath();
+    ctx.fillStyle = '#03050b'; ctx.fill(); ctx.strokeStyle = 'rgba(120,140,200,.35)'; ctx.lineWidth = 1; ctx.stroke();
+  } else if (g.cal) {
+    ctx.beginPath(); ctx.moveTo(0, Y(g.cal.yL)); ctx.lineTo(Wc, Y(g.cal.yR)); ctx.lineTo(Wc, H); ctx.lineTo(0, H); ctx.closePath();
+    ctx.fillStyle = '#0a0d1a'; ctx.fill();
+  }
+
+  if (!site.aspect && S.tab === 'sky') setMsg(hasLoc(site) ? '' : '「位置合わせ」タブで緯度経度を入れてください');
+  else if (site.aspect && !g.cal && S.tab !== 'site') setMsg(S.tab === 'cal' ? '' : '「位置合わせ」で方角を合わせると、天体が表示されます');
+  else if (!hasLoc(site) && S.tab === 'sky') setMsg('「位置合わせ」タブで緯度経度を入れてください');
+  else setMsg('');
+
+  if (S.tab === 'sky' && g.cal) drawSky(ctx, g, X, Y, Wc, H);
+  if (S.tab === 'cal') drawCal(ctx, g, X, Y, Wc);
+  if (S.tab === 'sil') drawSil(ctx, g, X, Y, Wc);
+}
+function drawCompass(ctx, g, X, Y) {
+  const { cal, proj } = g;
+  ctx.strokeStyle = 'rgba(242,200,107,.55)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(X(0), Y(cal.yL)); ctx.lineTo(X(1), Y(cal.yR)); ctx.stroke();
+  for (let az = 0; az < 360; az += 5) {
+    const x = azToX(cal, az); if (x == null) continue;
+    const y = Y(yh(cal, x)), len = az % 45 === 0 ? 10 : az % 15 === 0 ? 6 : 3;
+    ctx.beginPath(); ctx.moveTo(X(x), y - len / 2); ctx.lineTo(X(x), y + len / 2); ctx.stroke();
+    if (az % 45 === 0) textOut(ctx, dirName(az), X(x), y + 16, '#f2c86b', 'center', 14, 700);
+    else if (az % 22.5 === 0) textOut(ctx, dirName(az), X(x), y + 15, 'rgba(242,200,107,.75)', 'center', 11, 500);
+  }
+  for (let k = 0; k < 16; k++) { // 22.5°ごとの名前（5°刻みでは拾えない分）
+    const az = k * 22.5; if (az % 5 === 0) continue;
+    const x = azToX(cal, az); if (x == null) continue;
+    textOut(ctx, dirName(az), X(x), Y(yh(cal, x)) + 15, 'rgba(242,200,107,.7)', 'center', 11, 500);
+  }
+}
+function drawSky(ctx, g, X, Y, Wc, H) {
+  const site = S.site, { cal, proj } = g;
+  if (S.grid) {
+    ctx.setLineDash([4, 6]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(190,205,255,.22)';
+    for (let alt = 10; alt <= 80; alt += 10) {
+      ctx.beginPath();
+      for (let x = 0; x <= 1.0001; x += 0.01) { const y = Y(yh(cal, x) - cal.f * gfun(alt, proj)); x === 0 ? ctx.moveTo(X(x), y) : ctx.lineTo(X(x), y); }
+      ctx.stroke();
+      for (let x = 0.02; x < 1; x += 0.2) {
+        const y = Y(yh(cal, x) - cal.f * gfun(alt, proj));
+        if (y > 8 && y < H - 8) textOut(ctx, alt + '°', X(x), y - 7, 'rgba(200,212,255,.7)', 'left', 10, 500);
+      }
+    }
+    ctx.setLineDash([]);
+    drawCompass(ctx, g, X, Y);
+  }
+  if (!hasLoc(site)) return;
+  const now = curTime();
+  if (S.path) { // 一晩の動き（30分ごと）
+    for (const id of S.selected) {
+      const o = getObj(id); if (!o) continue;
+      let prev = null;
+      for (let k = 0; k <= 48; k++) {
+        const t = new Date(S.base.getTime() + k * 30 * 60000);
+        const sunAlt = S.tl ? S.tl.sunAlt[Math.min(STEPS - 1, k * 6)] : -20;
+        const ok = o.kind === 'sun' ? sunAlt > -1 : (o.kind === 'moon' || sunAlt < -6);
+        const p = ok ? Astro.position(o, t, site.lat, site.lon) : null;
+        const q = p && p.alt > -3 ? skyToXY(cal, proj, p.az, p.alt) : null;
+        if (q) {
+          const px = X(q.x), py = Y(q.y);
+          if (prev && Math.abs(prev[0] - px) < Wc * 0.3) {
+            ctx.strokeStyle = o.color + '55'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(px, py); ctx.stroke();
+          }
+          ctx.fillStyle = o.color + '99'; ctx.beginPath(); ctx.arc(px, py, 2.2, 0, 7); ctx.fill();
+          if (k % 2 === 0) textOut(ctx, t.getHours() + '時', px + 5, py - 7, 'rgba(236,231,214,.75)', 'left', 10, 500);
+          prev = [px, py];
+        } else prev = null;
+      }
+    }
+  }
+  for (const id of S.selected) { // 今の位置
+    const o = getObj(id); if (!o) continue;
+    const p = Astro.position(o, now, site.lat, site.lon);
+    const q = skyToXY(cal, proj, p.az, p.alt); if (!q) continue;
+    const st = statusCode(site, g, p);
+    let px = X(q.x), py = Y(q.y); const top = py < 12;
+    if (top) py = 12;
+    ctx.lineWidth = 2;
+    if (st === 2 || st === 4) {
+      ctx.fillStyle = o.color; ctx.strokeStyle = '#fff';
+      ctx.beginPath(); ctx.arc(px, py, o.kind === 'moon' || o.kind === 'sun' ? 9 : 6, 0, 7); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.globalAlpha = st === 0 ? 0.45 : 0.95;
+      ctx.setLineDash([3, 3]); ctx.strokeStyle = o.color;
+      ctx.beginPath(); ctx.arc(px, py, 7, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+    let label = o.name + (st === 1 ? '（かげ）' : st === 0 ? '（地平線の下）' : '');
+    if (top) label = '↑ ' + label + ` ${Math.round(p.alt)}°`;
+    textOut(ctx, label, px + 11, py, st === 0 ? 'rgba(236,231,214,.55)' : '#ece7d6', 'left', 13, 700);
+  }
+  if (S.tap) {
+    const px = X(S.tap.x), py = Y(S.tap.y);
+    ctx.strokeStyle = '#64d8e8'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(px - 10, py); ctx.lineTo(px + 10, py); ctx.moveTo(px, py - 10); ctx.lineTo(px, py + 10); ctx.stroke();
+  }
+}
+const HANDLE_X = [0.02, 0.98];
+function drawCal(ctx, g, X, Y, Wc) {
+  const site = S.site; if (!site.aspect) return;
+  const hz = site.hz || { yL: site.aspect / 2, yR: site.aspect / 2 };
+  const c = { yL: hz.yL, yR: hz.yR };
+  if (g.cal) drawCompass(ctx, g, X, Y);
+  ctx.strokeStyle = '#f2c86b'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, Y(c.yL)); ctx.lineTo(Wc, Y(c.yR)); ctx.stroke();
+  HANDLE_X.forEach(hx => {
+    const y = Y(yh(c, hx));
+    ctx.fillStyle = 'rgba(242,200,107,.9)'; ctx.strokeStyle = '#1a1606'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(X(hx), y, 13, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1a1606'; ctx.font = '700 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('↕', X(hx), y);
+  });
+  site.refs.forEach((r, i) => {
+    if (!r || r.x == null || (i === 1 && site.proj === 'equi')) return;
+    const px = X(r.x), py = Y(r.y);
+    ctx.strokeStyle = 'rgba(100,216,232,.5)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(px, Y(0)); ctx.lineTo(px, Y(site.aspect)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = '#64d8e8'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(px, py, 12, 0, 7); ctx.stroke();
+    textOut(ctx, String(i + 1), px, py, '#64d8e8', 'center', 13, 800);
+  });
+  if (S.pick != null) setMsg(`点${S.pick + 1}にする場所を写真の上でタップしてください`);
+}
+function drawSil(ctx, g, X, Y, Wc) {
+  const site = S.site; if (!site.aspect) return;
+  if (g.cal) drawCompass(ctx, g, X, Y);
+  if (!site.profile) { if (!S.photo) setMsg('写真を選ぶとシルエットを作れます'); return; }
+  const P = site.profile;
+  ctx.beginPath(); ctx.moveTo(0, Y(P[0]));
+  P.forEach((y, i) => ctx.lineTo(X((i + 0.5) / P.length), Y(y)));
+  ctx.lineTo(Wc, Y(P[P.length - 1]));
+  ctx.strokeStyle = '#86e0a8'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.lineTo(Wc, Y(site.aspect)); ctx.lineTo(0, Y(site.aspect)); ctx.closePath();
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill();
+}
+
+/* ---------- 写真の上の操作 ---------- */
+let ptr = null;
+function evToU(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) / S.scale, y: (e.clientY - r.top) / S.scale - (S.g ? S.g.pad : 0), cx: e.clientX - r.left, cy: e.clientY - r.top };
+}
+function hitHandle(p) {
+  const site = S.site; if (!site || !site.aspect) return null;
+  const hz = site.hz || { yL: site.aspect / 2, yR: site.aspect / 2 };
+  for (let i = 0; i < 2; i++) {
+    const hx = HANDLE_X[i] * S.scale, hy = (yh(hz, HANDLE_X[i]) + S.g.pad) * S.scale;
+    if (Math.hypot(p.cx - hx, p.cy - hy) < 28) return i;
+  }
+  return null;
+}
+function ensureProfile() {
+  const site = S.site; if (site.profile) return;
+  const g = S.g; site.profile = Array.from({ length: PN }, (_, i) => g && g.cal ? clamp(yh(g.cal, (i + 0.5) / PN), 0, site.aspect) : site.aspect * 0.6);
+}
+function applyTrace(a, b) {
+  const P = S.site.profile, N = P.length, A = S.site.aspect;
+  const i0 = clamp(Math.floor(a.x * N), 0, N - 1), i1 = clamp(Math.floor(b.x * N), 0, N - 1);
+  if (i0 === i1) { P[i1] = clamp(b.y, 0, A); return; }
+  const lo = Math.min(i0, i1), hi = Math.max(i0, i1);
+  for (let i = lo; i <= hi; i++) { const t = (i - i0) / (i1 - i0); P[i] = clamp(a.y + (b.y - a.y) * t, 0, A); }
+}
+function pushUndo() { if (S.site.profile) { S.undo.push(S.site.profile.slice()); if (S.undo.length > 30) S.undo.shift(); } else S.undo.push(null); }
+cv.addEventListener('pointerdown', e => {
+  if (!S.site) return;
+  const p = evToU(e); ptr = { sx: e.clientX, sy: e.clientY, moved: false, mode: null };
+  if (S.tab === 'cal' && S.site.aspect && S.pick == null) {
+    const h = hitHandle(p);
+    if (h != null) { ptr.mode = 'hz'; ptr.h = h; cv.setPointerCapture(e.pointerId); e.preventDefault(); }
+  } else if (S.tab === 'sil' && S.trace && S.site.aspect) {
+    ptr.mode = 'trace'; pushUndo(); ensureProfile(); ptr.last = p; applyTrace(p, p);
+    cv.setPointerCapture(e.pointerId); e.preventDefault(); render();
+  }
+});
+cv.addEventListener('pointermove', e => {
+  if (!ptr) return;
+  if (Math.hypot(e.clientX - ptr.sx, e.clientY - ptr.sy) > 8) ptr.moved = true;
+  const p = evToU(e);
+  if (ptr.mode === 'hz') {
+    const site = S.site, hz = site.hz || { yL: site.aspect / 2, yR: site.aspect / 2 };
+    const ys = HANDLE_X.map(hx => yh(hz, hx)); ys[ptr.h] = clamp(p.y, -site.aspect, site.aspect * 2);
+    const slope = (ys[1] - ys[0]) / (HANDLE_X[1] - HANDLE_X[0]);
+    const yL = ys[0] - slope * HANDLE_X[0];
+    site.hz = { yL, yR: yL + slope }; site.hzManual = true; render();
+  } else if (ptr.mode === 'trace') { applyTrace(ptr.last, p); ptr.last = p; render(); }
+});
+cv.addEventListener('pointerup', e => {
+  if (!ptr) return;
+  const p = evToU(e), m = ptr; ptr = null;
+  if (m.mode === 'hz') { saveSite(); updateCalUI(); return; }
+  if (m.mode === 'trace') { saveSite(); computeTimelines(); return; }
+  if (!m.moved) onTap(p);
+});
+cv.addEventListener('pointercancel', () => { if (ptr && ptr.mode) { saveSite(); } ptr = null; });
+function onTap(p) {
+  const site = S.site, g = S.g;
+  if (S.tab === 'cal' && S.pick != null && site.aspect) {
+    if (p.y < 0 || p.y > site.aspect) return;
+    const r = site.refs[S.pick] || { type: 'az', az: null };
+    site.refs[S.pick] = Object.assign({}, r, { x: clamp(p.x, 0, 1), y: p.y });
+    S.pick = null;
+    if (!site.hzManual) autoHorizon(site);
+    saveSite(); updateCalUI(); render(); computeTimelines();
+  } else if (S.tab === 'sky' && g && g.cal) {
+    const s = xyToSky(g.cal, g.proj, p.x, p.y);
+    if (azToX(g.cal, s.az) == null) return;
+    S.tap = { x: p.x, y: p.y };
+    let t = `タップした場所：${dirName(s.az)}（${s.az.toFixed(0)}°）、高さ ${s.alt.toFixed(1)}°`;
+    if (!g.virtual && site.profile) { const o = obstacle(site, g, s.az); if (o.covered) t += `。この方角は高さ ${Math.max(0, o.alt).toFixed(1)}° まで障害物があります`; }
+    $('#tapInfo').textContent = t; $('#tapInfo').hidden = false; render();
+  }
+}
+$('#zIn').onclick = () => { S.zoom = Math.min(5, S.zoom * 1.4); render(); };
+$('#zOut').onclick = () => { S.zoom = Math.max(1, S.zoom / 1.4); render(); };
+function scrollToAz(az) {
+  const g = S.g; if (!g || !g.cal) return;
+  const x = azToX(g.cal, az); if (x == null) { toast('写真の範囲外の方角です'); return; }
+  sc.scrollTo({ left: x * S.scale - sc.clientWidth / 2, behavior: 'smooth' });
+}
+
+/* ---------- 時刻 ---------- */
+function setNow() {
+  const now = new Date(); const b = new Date(now); b.setHours(12, 0, 0, 0);
+  if (now.getHours() < 12) b.setDate(b.getDate() - 1);
+  S.base = b; S.min = Math.round((now - b) / 60000 / STEP) * STEP;
+}
+function updateTimeUI() {
+  const t = curTime(), b = S.base;
+  $('#dateIn').value = `${b.getFullYear()}-${pad2(b.getMonth() + 1)}-${pad2(b.getDate())}`;
+  $('#timeSlider').value = S.min;
+  $('#timeOut').textContent = `${t.getMonth() + 1}/${t.getDate()}（${WD[t.getDay()]}）${hm(t)}`;
+}
+function timeChanged() { updateTimeUI(); render(); updateCards(); }
+$('#timeSlider').addEventListener('input', e => { S.min = +e.target.value; timeChanged(); });
+$('#dateIn').addEventListener('change', e => {
+  const m = e.target.value.match(/(\d+)-(\d+)-(\d+)/); if (!m) return;
+  S.base = new Date(+m[1], +m[2] - 1, +m[3], 12); computeTimelines(); timeChanged();
+});
+$$('.quick button').forEach(b => b.onclick = () => {
+  const q = b.dataset.q;
+  if (q === 'now') { const old = S.base.getTime(); setNow(); if (S.base.getTime() !== old) computeTimelines(); }
+  else if (q === 'm60') S.min = Math.max(0, S.min - 60);
+  else if (q === 'p60') S.min = Math.min(1440, S.min + 60);
+  else if (S.tl) {
+    const k = q === 'sunset' ? S.tl.ev.sunset : S.tl.ev.dark;
+    if (k == null) { toast(q === 'sunset' ? 'この日は日の入りがありません' : 'この日は空が十分暗くなりません'); return; }
+    S.min = k * STEP;
+  } else { toast('緯度経度を入れると使えます'); return; }
+  timeChanged();
+});
+
+/* ---------- 一晩の見え方（5分ごと） ---------- */
+function crossIdx(arr, th, down, from = 0) {
+  for (let k = from + 1; k < arr.length; k++) {
+    if (down ? (arr[k - 1] >= th && arr[k] < th) : (arr[k - 1] < th && arr[k] >= th)) return k;
+  }
+  return null;
+}
+function computeTimelines() {
+  const site = S.site; S.tl = null;
+  if (!site || !hasLoc(site)) { buildCards(); return; }
+  const g = geom(); S.g = g;
+  const sunAlt = new Float32Array(STEPS);
+  for (let k = 0; k < STEPS; k++) sunAlt[k] = Astro.position(CAT_BY_ID.sun, new Date(S.base.getTime() + k * STEP * 60000), site.lat, site.lon).trueAlt;
+  const per = {};
+  for (const id of S.selected) {
+    const o = getObj(id); if (!o) continue;
+    const st = new Uint8Array(STEPS);
+    for (let k = 0; k < STEPS; k++) st[k] = statusCode(site, g, Astro.position(o, new Date(S.base.getTime() + k * STEP * 60000), site.lat, site.lon));
+    per[id] = st;
+  }
+  const sunset = crossIdx(sunAlt, -0.833, true), dark = crossIdx(sunAlt, -18, true);
+  const dawn = crossIdx(sunAlt, -18, false, dark || 0), sunrise = crossIdx(sunAlt, -0.833, false, sunset || 0);
+  S.tl = { sunAlt, per, ev: { sunset, dark, dawn, sunrise } };
+  const f = k => k == null ? '―' : hm(new Date(S.base.getTime() + k * STEP * 60000));
+  $('#sunLine').textContent = `日の入り ${f(sunset)}　暗くなる ${f(dark)}　明るくなりはじめ ${f(dawn)}　日の出 ${f(sunrise)}`;
+  buildCards();
+}
+function windowsText(o, st, sunAlt) {
+  const okDark = k => o.kind === 'sun' ? true : o.kind === 'moon' ? true : sunAlt[k] < -6;
+  const runs = []; let s = null;
+  for (let k = 0; k < STEPS; k++) {
+    const ok = (st[k] === 2 || st[k] === 4) && okDark(k);
+    if (ok && s == null) s = k;
+    if ((!ok || k === STEPS - 1) && s != null) { runs.push([s, ok ? k : k - 1]); s = null; }
+  }
+  const f = k => hm(new Date(S.base.getTime() + k * STEP * 60000));
+  if (runs.length) return (o.kind === 'sun' ? '見える時間：' : '暗い空で見える時間：') + runs.map(r => `${f(r[0])}〜${f(r[1])}`).join('、');
+  const cnt = [0, 0, 0, 0, 0];
+  for (let k = 0; k < STEPS; k++) if (okDark(k)) cnt[st[k]]++;
+  if (cnt[1] > 0) return 'この夜は、地平線の上にいる間ずっと障害物のかげです';
+  if (cnt[3] > 0) return 'この夜は、写真に写っていない方角にあります';
+  return o.kind === 'sun' ? 'この日は見えません' : 'この夜、暗い時間は地平線の下です';
+}
+function buildCards() {
+  const box = $('#cards'); box.innerHTML = '';
+  renderChips();
+  if (!S.site || !hasLoc(S.site)) { box.innerHTML = '<p class="note">「位置合わせ」タブで緯度経度を入れると、天体ごとの見え方が表示されます。</p>'; return; }
+  for (const id of S.selected) {
+    const o = getObj(id); if (!o) continue;
+    const el = document.createElement('article'); el.className = 'card'; el.dataset.id = id;
+    el.innerHTML = `<div class="cardHead"><span class="dot" style="background:${o.color}"></span><h3></h3><span class="sub"></span><button class="rm" aria-label="一覧から外す">×</button></div>
+      <p class="now"></p><canvas class="tl" aria-label="正午から翌日の正午までの見え方"></canvas><p class="win"></p>`;
+    el.querySelector('h3').textContent = o.name; el.querySelector('.sub').textContent = o.sub || '';
+    el.querySelector('.rm').onclick = () => { S.selected = S.selected.filter(x => x !== id); saveMeta(); computeTimelines(); render(); };
+    el.querySelector('.tl').addEventListener('click', ev => {
+      const r = ev.currentTarget.getBoundingClientRect();
+      S.min = clamp(Math.round((ev.clientX - r.left) / r.width * 1440 / STEP) * STEP, 0, 1440); timeChanged();
+    });
+    el.querySelector('h3').onclick = () => { const p = Astro.position(o, curTime(), S.site.lat, S.site.lon); scrollToAz(p.az); };
+    if (S.tl && S.tl.per[id]) el.querySelector('.win').textContent = windowsText(o, S.tl.per[id], S.tl.sunAlt);
+    box.appendChild(el);
+  }
+  updateCards();
+}
+function updateCards() {
+  if (!S.site || !hasLoc(S.site)) return;
+  const t = curTime(), g = S.g || geom();
+  $$('#cards .card').forEach(el => {
+    const o = getObj(el.dataset.id); if (!o) return;
+    const p = Astro.position(o, t, S.site.lat, S.site.lon);
+    const st = statusCode(S.site, g, p);
+    let txt = `${hm(t)}　${dirName(p.az)}（${p.az.toFixed(0)}°）高さ ${p.alt.toFixed(1)}°　<span class="st st-${st}">${ST_TEXT[st]}</span>`;
+    if (o.kind === 'moon') { const ph = Astro.moonPhase(t); txt += `<br>明るい部分 約${Math.round(ph.illum * 100)}%（${ph.waxing ? '満ちていく' : '欠けていく'}途中）`; }
+    el.querySelector('.now').innerHTML = txt;
+    drawTimeline(el.querySelector('.tl'), S.tl && S.tl.per[o.id]);
+  });
+}
+function drawTimeline(c, st) {
+  const w = c.clientWidth || 300, h = 50, dpr = Math.min(devicePixelRatio || 1, 2);
+  if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = h * dpr; }
+  const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  if (!S.tl || !st) return;
+  const bw = w / (STEPS - 1);
+  for (let k = 0; k < STEPS - 1; k++) {
+    const a = S.tl.sunAlt[k];
+    ctx.fillStyle = a > -0.833 ? '#5d6fa8' : a > -6 ? '#3b4778' : a > -12 ? '#28315a' : a > -18 ? '#1b2245' : '#0a0d22';
+    ctx.fillRect(k * bw, 0, bw + 0.6, 7);
+    ctx.fillStyle = ST_COLOR[st[k]]; ctx.fillRect(k * bw, 10, bw + 0.6, 18);
+  }
+  ctx.fillStyle = '#9aa3c4'; ctx.font = '10px "Hiragino Sans", system-ui'; ctx.textBaseline = 'top';
+  [0, 3, 6, 9, 12, 15, 18, 21, 24].forEach((hh, i) => {
+    const x = hh * 60 / 1440 * w; ctx.fillRect(x, 28, 1, 4);
+    ctx.textAlign = i === 0 ? 'left' : i === 8 ? 'right' : 'center';
+    ctx.fillText(((12 + hh) % 24) + '時', x, 34);
+  });
+  const x = S.min / 1440 * w;
+  ctx.fillStyle = '#f2c86b'; ctx.fillRect(x - 1, 0, 2, 30);
+}
+
+/* ---------- 天体えらび ---------- */
+function renderChips() {
+  const box = $('#chips'); box.innerHTML = '';
+  for (const id of S.selected) {
+    const o = getObj(id); if (!o) continue;
+    const b = document.createElement('button'); b.className = 'chip';
+    b.innerHTML = `<i style="background:${o.color}"></i>`; b.append(o.name);
+    b.onclick = () => { if (!S.site || !hasLoc(S.site)) return; const p = Astro.position(o, curTime(), S.site.lat, S.site.lon); scrollToAz(p.az); };
+    box.appendChild(b);
+  }
+  const add = document.createElement('button'); add.className = 'chip add'; add.textContent = '＋ 天体をえらぶ';
+  add.onclick = openSheet; box.appendChild(add);
+}
+function openSheet() { $('#sheet').hidden = false; $('#pickSearch').value = ''; renderPick(); }
+$('#sheetClose').onclick = () => { $('#sheet').hidden = true; computeTimelines(); render(); };
+$('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('#sheetClose').click(); });
+$('#pickSearch').addEventListener('input', renderPick);
+function renderPick() {
+  const q = $('#pickSearch').value.trim(); const box = $('#pickList'); box.innerHTML = '';
+  const list = [...CATALOG, ...S.custom.map(c => Object.assign({ cat: '追加した天体' }, c))];
+  let cat = null;
+  for (const o of list) {
+    if (q && !(o.name + (o.sub || '')).includes(q)) continue;
+    if (o.cat !== cat) { cat = o.cat; const h = document.createElement('p'); h.className = 'catH'; h.textContent = cat; box.appendChild(h); }
+    const l = document.createElement('label'); l.className = 'pickItem';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = S.selected.includes(o.id);
+    cb.onchange = () => { S.selected = cb.checked ? [...S.selected, o.id] : S.selected.filter(x => x !== o.id); saveMeta(); };
+    const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = o.color;
+    l.append(cb, dot, o.name); if (o.sub) { const sm = document.createElement('small'); sm.textContent = o.sub; l.append(sm); }
+    box.appendChild(l);
+  }
+}
+$('#cAdd').onclick = () => {
+  const name = $('#cName').value.trim(); const ra = $('#cRa').value.trim().split(/[\s:h時分m]+/).filter(Boolean).map(Number);
+  const dec = parseFloat($('#cDec').value);
+  if (!name || !ra.length || ra.some(isNaN) || !Number.isFinite(dec) || Math.abs(dec) > 90) { toast('名前・赤経・赤緯を入れてください'); return; }
+  const raDeg = (ra[0] + (ra[1] || 0) / 60 + (ra[2] || 0) / 3600) * 15;
+  const o = { id: 'c' + Date.now().toString(36), name, sub: '追加した天体', ra: raDeg, dec, kind: 'fixed', color: '#9effc4' };
+  S.custom.push(o); S.selected.push(o.id); saveMeta();
+  $('#cName').value = $('#cRa').value = $('#cDec').value = ''; renderPick(); toast(`${name}を追加しました`);
+};
+
+/* ---------- 位置合わせ画面 ---------- */
+const REF_BODIES = CATALOG.filter(o => o.cat !== '星雲・星団など');
+function buildRefRows() {
+  const box = $('#refRows'); box.innerHTML = '';
+  [0, 1].forEach(i => {
+    const row = document.createElement('div'); row.className = 'refRow'; row.dataset.i = i;
+    row.innerHTML = `<div class="refHead"><span class="refNum">${i + 1}</span><button class="btn pickBtn"></button></div>
+      <label>目印にするもの<select class="refType"><option value="az">地上の目印（方角を入力）</option>
+      ${REF_BODIES.map(o => `<option value="${o.id}">${o.name}</option>`).join('')}</select></label>
+      <label class="azLab">目印の方角（度）<input class="refAz" inputmode="decimal" placeholder="例：245"></label>
+      <p class="refTruth note"></p>`;
+    row.querySelector('.pickBtn').onclick = () => { S.pick = S.pick === i ? null : i; updateCalUI(); render(); if (S.pick != null) toast('写真の上の目印をタップしてください'); };
+    row.querySelector('.refType').onchange = e => {
+      const r = S.site.refs[i] || { x: null, y: null }; S.site.refs[i] = Object.assign({}, r, { type: e.target.value });
+      if (!S.site.hzManual) autoHorizon(S.site); saveSite(); updateCalUI(); render(); computeTimelines();
+    };
+    row.querySelector('.refAz').oninput = e => {
+      const v = parseFloat(e.target.value); const r = S.site.refs[i];
+      r.az = Number.isFinite(v) ? norm360(v) : null; saveSite(); updateCalUI(false); render(); computeTimelines();
+    };
+    box.appendChild(row);
+  });
+}
+function updateCalUI(fillInputs = true) {
+  const site = S.site; if (!site) return;
+  if (fillInputs) {
+    $('#siteName').value = site.name || '';
+    $('#lat').value = Number.isFinite(site.lat) ? site.lat : '';
+    $('#lon').value = Number.isFinite(site.lon) ? site.lon : '';
+    $('#photoTime').value = site.photoTime ? localISO(new Date(site.photoTime)) : '';
+    $('#widthDeg').value = site.widthDeg || '';
+  }
+  $$('#projSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === site.proj));
+  $('#photoBtn').textContent = S.photo ? '写真を選び直す' : '写真を選ぶ';
+  $$('.refRow').forEach(row => {
+    const i = +row.dataset.i, r = site.refs[i] || { type: 'az' };
+    row.hidden = i === 1 && site.proj === 'equi';
+    row.querySelector('.pickBtn').textContent = S.pick === i ? 'タップを待っています…（やめる）' : r.x != null ? '場所を指定しなおす' : '写真で場所を指定';
+    row.querySelector('.pickBtn').classList.toggle('on', S.pick === i);
+    row.querySelector('.pickBtn').disabled = !site.aspect;
+    row.querySelector('.refType').value = r.type;
+    row.querySelector('.azLab').hidden = r.type !== 'az';
+    if (fillInputs) row.querySelector('.refAz').value = Number.isFinite(r.az) ? r.az : '';
+    const tr = refTruth(site, r); let t;
+    if (r.type !== 'az' && (!site.photoTime || !hasLoc(site))) t = '撮影日時と緯度経度を入れると、位置を計算します';
+    else if (tr) t = `この目印の方角：${dirName(tr.az)}（${tr.az.toFixed(1)}°）` + (Number.isFinite(tr.alt) ? `、高さ ${tr.alt.toFixed(1)}°` : '');
+    else t = '方角を入れてください';
+    if (r.x == null) t += '。写真の上の場所がまだです';
+    row.querySelector('.refTruth').textContent = t;
+  });
+  const oneRef = site.refs.slice(0, 2).filter(r => r && r.x != null).length === 1;
+  $('#widthRow').hidden = site.proj === 'equi' || !oneRef;
+  const cal = computeCal(site), res = $('#calResult');
+  if (!site.aspect) res.textContent = 'まず写真を選んでください。';
+  else if (!cal) res.textContent = site.proj === 'equi' ? '目印を1つ指定すると方角が決まります。' : '目印を2つ指定すると方角が決まります。';
+  else {
+    const width = 1 / cal.f * R2D, left = cal.az0, right = norm360(cal.az0 + width);
+    res.textContent = width >= 359 ? `全周（360°）の写真として合わせました。`
+      : `写真の左端が${dirName(left)}（${left.toFixed(0)}°）、右端が${dirName(right)}（${right.toFixed(0)}°）、横の範囲は約${width.toFixed(0)}°です。` + (width > 362 ? ' 範囲が360°を超えています。目印の場所か方角を見直してください。' : '');
+  }
+}
+$('#siteName').addEventListener('input', e => { S.site.name = e.target.value; saveSite(); renderSiteSel(); renderSiteList(); });
+['lat', 'lon'].forEach(k => $('#' + k).addEventListener('change', e => {
+  const v = parseFloat(e.target.value); const lim = k === 'lat' ? 90 : 180;
+  S.site[k] = Number.isFinite(v) && Math.abs(v) <= lim ? v : null;
+  if (!Number.isFinite(v) && e.target.value) toast('数字で入れてください');
+  if (!S.site.hzManual) autoHorizon(S.site);
+  saveSite(); updateCalUI(false); computeTimelines(); render();
+}));
+$('#geoBtn').onclick = () => {
+  if (!navigator.geolocation) { toast('このブラウザでは現在地を取得できません'); return; }
+  toast('現在地を取得しています…');
+  navigator.geolocation.getCurrentPosition(p => {
+    S.site.lat = +p.coords.latitude.toFixed(5); S.site.lon = +p.coords.longitude.toFixed(5);
+    if (!S.site.hzManual) autoHorizon(S.site);
+    saveSite(); updateCalUI(); computeTimelines(); render(); toast('現在地を入れました');
+  }, err => toast(err.code === 1 ? '位置情報の利用が許可されていません。設定アプリのSafariで許可するか、手で入力してください' : '現在地を取得できませんでした'), { enableHighAccuracy: true, timeout: 15000 });
+};
+$('#photoTime').addEventListener('change', e => {
+  const d = new Date(e.target.value); S.site.photoTime = isNaN(d) ? null : d.toISOString();
+  if (!S.site.hzManual) autoHorizon(S.site); saveSite(); updateCalUI(false); render(); computeTimelines();
+});
+$('#widthDeg').addEventListener('input', e => { const v = parseFloat(e.target.value); S.site.widthDeg = v > 0 ? v : null; saveSite(); updateCalUI(false); render(); computeTimelines(); });
+$$('#projSeg button').forEach(b => b.onclick = () => {
+  S.site.proj = b.dataset.p;
+  if (b.dataset.p === 'equi' && !S.site.hz && S.site.aspect) S.site.hz = { yL: S.site.aspect / 2, yR: S.site.aspect / 2 };
+  saveSite(); updateCalUI(); render(); computeTimelines();
+});
+$('#hzAuto').onclick = () => {
+  if (autoHorizon(S.site)) { S.site.hzManual = false; saveSite(); render(); computeTimelines(); toast('太陽・月の高さから水平線を合わせました'); }
+  else toast('太陽か月を目印にして、写真の上の場所を指定するとできます');
+};
+$('#hzReset').onclick = () => {
+  if (!S.site.aspect) return;
+  S.site.hz = { yL: S.site.aspect / 2, yR: S.site.aspect / 2 }; S.site.hzManual = true; saveSite(); render(); computeTimelines();
+};
+
+/* ---------- 写真の読み込み ---------- */
+$('#photoBtn').onclick = () => $('#photoFile').click();
+$('#photoFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  try { await importPhoto(file); } catch (err) { console.error(err); toast('写真を読み込めませんでした。JPEGかPNGの写真で試してください'); }
+});
+function loadImg(url) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; }); }
+async function importPhoto(file) {
+  toast('写真を読み込んでいます…', 8000);
+  const buf = await file.arrayBuffer(); const ex = readExif(buf);
+  const url = URL.createObjectURL(file); const img = await loadImg(url);
+  const W = img.naturalWidth, H = img.naturalHeight;
+  const k = Math.min(1, 6000 / W, Math.sqrt(10e6 / (W * H)));
+  const c = document.createElement('canvas'); c.width = Math.round(W * k); c.height = Math.round(H * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
+  const aspect = c.height / c.width, site = S.site;
+  const hadWork = site.refs.some(r => r && r.x != null) || site.profile;
+  if (site.aspect && hadWork && Math.abs(aspect - site.aspect) / site.aspect > 0.02) {
+    if (!confirm('前の写真と縦横の比率が違うので、別の写真のようです。位置合わせとシルエットを消して、新しい写真として使いますか？')) { toast('読み込みをやめました'); return; }
+    site.refs = site.refs.map(r => r ? Object.assign({}, r, { x: null, y: null }) : r); site.profile = null; site.hz = null; site.hzManual = false; S.undo = [];
+  }
+  site.aspect = hadWork && site.aspect && Math.abs(aspect - site.aspect) / site.aspect <= 0.02 ? site.aspect : aspect;
+  const msgs = ['写真を読み込みました'];
+  if (ex.time) { site.photoTime = ex.time.toISOString(); msgs.push('撮影日時を入れました'); }
+  if (Number.isFinite(ex.lat) && !hasLoc(site)) { site.lat = +ex.lat.toFixed(5); site.lon = +ex.lon.toFixed(5); msgs.push('写真の位置情報から緯度経度を入れました'); }
+  await DB.put('photos', { buf: await blob.arrayBuffer(), type: 'image/jpeg' }, site.id);
+  await DB.put('sites', site);
+  await loadPhoto(); requestPersist();
+  S.firstScroll = true; updateCalUI(); updateModeSeg(); computeTimelines(); render(); toast(msgs.join('。'));
+}
+async function loadPhoto() {
+  if (S.photoURL) URL.revokeObjectURL(S.photoURL);
+  S.photo = null; S.photoURL = null;
+  if (!S.site) return;
+  const rec = await DB.get('photos', S.site.id); if (!rec) return;
+  S.photoURL = URL.createObjectURL(new Blob([rec.buf], { type: rec.type }));
+  try { S.photo = await loadImg(S.photoURL); } catch (e) { S.photo = null; }
+}
+function readExif(buf) {
+  try {
+    const v = new DataView(buf); if (v.getUint16(0) !== 0xFFD8) return {};
+    let o = 2;
+    while (o < v.byteLength - 4) {
+      const m = v.getUint16(o);
+      if (m === 0xFFE1 && v.getUint32(o + 4) === 0x45786966) return parseTiff(v, o + 10);
+      if ((m & 0xFF00) !== 0xFF00 || m === 0xFFDA) break;
+      o += 2 + v.getUint16(o + 2);
+    }
+  } catch (e) { }
+  return {};
+}
+function parseTiff(v, t) {
+  const le = v.getUint16(t) === 0x4949, u16 = p => v.getUint16(p, le), u32 = p => v.getUint32(p, le);
+  const SZ = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
+  const ifd = p => { const n = u16(p), tags = {}; for (let i = 0; i < n; i++) { const e = p + 2 + i * 12; tags[u16(e)] = { type: u16(e + 2), count: u32(e + 4), voff: e + 8 }; } return tags; };
+  const off = tg => (SZ[tg.type] || 1) * tg.count > 4 ? t + u32(tg.voff) : tg.voff;
+  const str = tg => { const p = off(tg); let s = ''; for (let i = 0; i < tg.count; i++) { const ch = v.getUint8(p + i); if (!ch) break; s += String.fromCharCode(ch); } return s; };
+  const rat = (p, i) => u32(p + i * 8) / u32(p + i * 8 + 4);
+  const res = {}, t0 = ifd(t + u32(t + 4));
+  if (t0[0x8769]) {
+    const ex = ifd(t + u32(t0[0x8769].voff)); const tg = ex[0x9003] || ex[0x9004];
+    if (tg) {
+      const m = str(tg).match(/(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/);
+      if (m) {
+        const oz = ex[0x9011] ? str(ex[0x9011]) : '';
+        const d = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}${/^[+-]\d\d:\d\d$/.test(oz) ? oz : ''}`);
+        if (!isNaN(d)) res.time = d;
+      }
+    }
+  }
+  if (t0[0x8825]) {
+    const gp = ifd(t + u32(t0[0x8825].voff));
+    if (gp[2] && gp[4]) {
+      const la = off(gp[2]), lo = off(gp[4]);
+      let lat = rat(la, 0) + rat(la, 1) / 60 + rat(la, 2) / 3600, lon = rat(lo, 0) + rat(lo, 1) / 60 + rat(lo, 2) / 3600;
+      if (gp[1] && String.fromCharCode(v.getUint8(gp[1].voff)) === 'S') lat = -lat;
+      if (gp[3] && String.fromCharCode(v.getUint8(gp[3].voff)) === 'W') lon = -lon;
+      if (Number.isFinite(lat) && Number.isFinite(lon) && (lat || lon)) { res.lat = lat; res.lon = lon; }
+    }
+  }
+  return res;
+}
+
+/* ---------- シルエット ---------- */
+$('#silAuto').onclick = () => {
+  if (!S.photo) { toast('写真がないので、自動では作れません。指でなぞって作れます'); return; }
+  pushUndo(); autoSilhouette(); saveSite(); render(); computeTimelines(); updateSilUI();
+  toast('シルエットを作りました。ずれているところは、なぞって直せます');
+};
+$('#silTh').addEventListener('change', () => { if (S.photo && S.site.profile) { pushUndo(); autoSilhouette(); saveSite(); render(); computeTimelines(); } });
+function autoSilhouette() {
+  const site = S.site, A = site.aspect, N = PN;
+  const Hs = clamp(Math.round(A * N * 3), 120, 900);
+  const c = document.createElement('canvas'); c.width = N; c.height = Hs;
+  const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(S.photo, 0, 0, N, Hs);
+  const d = ctx.getImageData(0, 0, N, Hs).data;
+  const px = (x, y) => { const i = (y * N + x) * 4; return [d[i], d[i + 1], d[i + 2]]; };
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const tops = []; for (let x = 0; x < N; x++) tops.push(px(x, 1));
+  const med = [0, 1, 2].map(ch => tops.map(p => p[ch]).sort((a, b) => a - b)[N >> 1]);
+  const th = +$('#silTh').value, raw = new Array(N);
+  for (let x = 0; x < N; x++) {
+    let ref = px(x, 1);
+    if (dist(ref, med) > th * 1.6) { raw[x] = 0; continue; } // 上端から障害物
+    let found = Hs - 1, cnt = 0;
+    for (let y = 2; y < Hs; y++) {
+      const p = px(x, y);
+      if (dist(p, ref) > th) { if (++cnt >= 3) { found = y - 2; break; } }
+      else { cnt = 0; ref = [ref[0] * 0.85 + p[0] * 0.15, ref[1] * 0.85 + p[1] * 0.15, ref[2] * 0.85 + p[2] * 0.15]; }
+    }
+    raw[x] = found;
+  }
+  site.profile = raw.map((_, i) => { // 5列の中央値でならす
+    const w = []; for (let j = -2; j <= 2; j++) w.push(raw[clamp(i + j, 0, N - 1)]);
+    return +(w.sort((a, b) => a - b)[2] / Hs * A).toFixed(5);
+  });
+}
+$('#silTrace').onclick = () => {
+  if (!S.site.aspect) { toast('先に写真を選んでください'); return; }
+  S.trace = !S.trace; updateSilUI();
+  if (S.trace) toast('写真の上を指でなぞると、緑の線がその位置に変わります');
+};
+$('#silUndo').onclick = () => {
+  if (!S.undo.length) { toast('元に戻せる操作がありません'); return; }
+  S.site.profile = S.undo.pop(); saveSite(); render(); computeTimelines(); updateSilUI();
+};
+$('#silClear').onclick = () => {
+  if (!S.site.profile || !confirm('シルエットを消しますか？')) return;
+  pushUndo(); S.site.profile = null; saveSite(); render(); computeTimelines(); updateSilUI(); updateModeSeg();
+};
+function updateSilUI() {
+  $('#silTrace').textContent = S.trace ? 'なぞるのをやめる' : '指でなぞって直す';
+  $('#silTrace').classList.toggle('on', S.trace);
+  cv.style.touchAction = S.tab === 'sil' && S.trace ? 'none' : S.tab === 'cal' ? 'pan-x' : 'pan-x pan-y';
+  $('#silAuto').disabled = !S.photo;
+  const s = S.site;
+  $('#silNote').textContent = !s ? '' : !s.aspect ? '写真を選ぶとシルエットを作れます。'
+    : s.profile ? 'シルエットは保存されています。なぞっている間は、写真を指で動かせません。' : 'まだシルエットがありません。';
+  updateModeSeg();
+}
+function updateModeSeg() {
+  const s = S.site, hasP = !!S.photo, hasS = !!(s && s.profile);
+  const eff = S.mode === 'photo' && hasP ? 'photo' : hasS ? 'sil' : hasP ? 'photo' : null;
+  $$('#modeSeg button').forEach(b => {
+    b.disabled = b.dataset.m === 'photo' ? !hasP : !hasS;
+    b.setAttribute('aria-pressed', b.dataset.m === eff);
+  });
+}
+$$('#modeSeg button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; saveMeta(); updateModeSeg(); render(); });
+$('#optGrid').onchange = e => { S.grid = e.target.checked; saveMeta(); render(); };
+$('#optPath').onchange = e => { S.path = e.target.checked; saveMeta(); render(); };
+
+/* ---------- 観測地の管理 ---------- */
+function renderSiteSel() {
+  const sel = $('#siteSel'); sel.innerHTML = '';
+  if (!S.sites.length) { sel.hidden = true; return; }
+  sel.hidden = false;
+  S.sites.forEach(s => { const o = document.createElement('option'); o.value = s.id; o.textContent = s.name || '名前なし'; sel.appendChild(o); });
+  sel.value = S.site ? S.site.id : '';
+}
+function renderSiteList() {
+  const ul = $('#siteList'); ul.innerHTML = '';
+  if (!S.sites.length) { ul.innerHTML = '<li class="note">まだ観測地がありません。名前を入れて追加してください。</li>'; return; }
+  S.sites.forEach(s => {
+    const li = document.createElement('li'); li.textContent = s.name || '名前なし';
+    if (S.site && s.id === S.site.id) { li.className = 'cur'; li.append('（表示中）'); }
+    else { const b = document.createElement('button'); b.className = 'btn'; b.textContent = '表示する'; b.onclick = () => switchSite(s.id); li.appendChild(b); }
+    ul.appendChild(li);
+  });
+}
+$('#siteSel').onchange = e => switchSite(e.target.value);
+async function switchSite(id) {
+  S.site = S.sites.find(s => s.id === id) || null; S.pick = null; S.trace = false; S.undo = []; S.tap = null; S.firstScroll = true;
+  $('#tapInfo').hidden = true;
+  await loadPhoto(); saveMeta(); refreshAll();
+}
+function refreshAll() {
+  renderSiteSel(); renderSiteList(); updateCalUI(); updateSilUI(); updateTimeUI();
+  computeTimelines(); render(); updateStorageNote();
+}
+$('#addSite').onclick = async () => {
+  const name = $('#newName').value.trim(); if (!name) { toast('観測地の名前を入れてください'); return; }
+  const s = newSite(name); S.sites.push(s); await DB.put('sites', s); $('#newName').value = '';
+  await switchSite(s.id); requestPersist(); setTab('cal'); toast(`「${name}」を追加しました。緯度経度と写真を入れましょう`);
+};
+$('#delPhoto').onclick = async () => {
+  if (!S.site || !S.photo) { toast('この観測地には写真がありません'); return; }
+  if (!confirm('写真を削除しますか？ 位置合わせとシルエットは残ります。')) return;
+  await DB.del('photos', S.site.id); await loadPhoto(); refreshAll(); toast('写真を削除しました');
+};
+$('#delSite').onclick = async () => {
+  if (!S.site || !confirm(`「${S.site.name}」を削除しますか？ 写真・位置合わせ・シルエットがすべて消えます。`)) return;
+  const id = S.site.id; await DB.del('sites', id); await DB.del('photos', id);
+  S.sites = S.sites.filter(s => s.id !== id); await switchSite(S.sites[0] ? S.sites[0].id : null); toast('観測地を削除しました');
+};
+$('#exportBtn').onclick = async () => {
+  const s = S.site; if (!s) return;
+  const data = { app: 'soranozoki', version: 1, exported: new Date().toISOString(), site: s };
+  const fname = `${(s.name || '観測地').replace(/[\\/:*?"<>|]/g, '_')}_観測地データ.json`;
+  const file = new File([JSON.stringify(data)], fname, { type: 'application/json' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = fname;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+};
+$('#importBtn').onclick = () => $('#jsonFile').click();
+$('#jsonFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  let data; try { data = JSON.parse(await file.text()); } catch (err) { toast('ファイルを読めませんでした'); return; }
+  const s = data && data.app === 'soranozoki' && data.site;
+  if (!s || !s.id || !Array.isArray(s.refs)) { toast('そらのぞきの観測地データではないようです'); return; }
+  const i = S.sites.findIndex(x => x.id === s.id);
+  if (i >= 0 && !confirm(`「${S.sites[i].name}」はすでにあります。読み込んだデータで上書きしますか？`)) return;
+  if (i >= 0) S.sites[i] = s; else S.sites.push(s);
+  await DB.put('sites', s); await switchSite(s.id); requestPersist();
+  toast(S.photo ? `「${s.name}」を読み込みました` : `「${s.name}」を読み込みました。写真を選び直すと写真表示に戻ります`, 4500);
+});
+async function requestPersist() { try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { } updateStorageNote(); }
+async function updateStorageNote() {
+  let p = false; try { p = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : false; } catch (e) { }
+  const standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  $('#storageNote').textContent = p || standalone ? 'このアプリのデータは消えにくい状態で保存されています。それでも念のため、観測地データを書き出しておくと安心です。'
+    : 'Safariでしばらく開かないと、データが消えることがあります。共有ボタンから「ホーム画面に追加」して使うと消えにくくなります。';
+}
+
+/* ---------- かざして見る（AR） ---------- */
+// 星座線は空しらべと共通のデータを読み込む（藤井結びの修正がそのまま反映される）
+const CONS_URL = 'https://hoshi-nanae.github.io/hoshizora/constellations.js';
+const CAM_FOV = 64; // iPhoneの1倍カメラの長辺方向の画角（度）。「線の大きさ」で微調整
+const AR = {
+  on: false, stream: null, ori: null, offset: null, acc: null, corr: { daz: 0, dalt: 0 },
+  fix: false, lat: null, lon: null, locName: '', sky: null, skyAt: 0, raf: 0, wake: null, consOK: null, R: null
+};
+const vecOf = (az, alt) => { const a = az * D2R, h = alt * D2R; return [Math.cos(h) * Math.sin(a), Math.cos(h) * Math.cos(a), Math.sin(h)]; };
+const wrap180 = d => ((d % 360) + 540) % 360 - 180;
+function arHint(t) { $('#arHint').textContent = t || ''; }
+function loadCons() {
+  return new Promise(res => {
+    if (typeof HOSHI_STARS !== 'undefined') return res(true);
+    const s = document.createElement('script'); s.src = CONS_URL;
+    s.onload = () => res(typeof HOSHI_STARS !== 'undefined'); s.onerror = () => res(false);
+    document.head.appendChild(s);
+  });
+}
+function onOri(e) {
+  if (e.alpha == null) return;
+  AR.ori = { a: e.alpha, b: e.beta, g: e.gamma };
+  if (e.webkitCompassHeading != null && e.webkitCompassAccuracy !== -1) {
+    AR.acc = e.webkitCompassAccuracy;
+    if (e.beta > 10 && e.beta < 150) { // 真上に向けている間は、直前の値を使う
+      const off = norm360(e.webkitCompassHeading + e.alpha);
+      AR.offset = AR.offset == null ? off : norm360(AR.offset + wrap180(off - AR.offset) * 0.05);
+    }
+  } else if (e.absolute) AR.offset = 0;
+}
+$('#arBtn').onclick = async () => {
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      if (await DeviceOrientationEvent.requestPermission() !== 'granted') {
+        toast('「動作と方向」へのアクセスが許可されていません。設定アプリのSafariで許可してから、もう一度開いてください', 5000); return;
+      }
+    }
+  } catch (e) { toast('「動作と方向」へのアクセスを確認できませんでした', 4000); return; }
+  $('#ar').hidden = false; AR.on = true; AR.fix = false; AR.sky = null; AR.skyAt = 0;
+  $('#arPanel').hidden = true; $('#arFix').classList.remove('on');
+  document.body.style.overflow = 'hidden';
+  window.addEventListener('deviceorientation', onOri);
+  if (S.site && hasLoc(S.site)) { AR.lat = S.site.lat; AR.lon = S.site.lon; AR.locName = `観測地「${S.site.name}」の位置で表示しています`; }
+  arHint('準備しています…');
+  try { AR.wake = navigator.wakeLock ? await navigator.wakeLock.request('screen') : null; } catch (e) { AR.wake = null; }
+  try {
+    AR.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+    const v = $('#arVideo'); v.srcObject = AR.stream; await v.play().catch(() => { });
+  } catch (e) { toast('カメラを使えませんでした。星座線だけを表示します', 4000); }
+  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => {
+    AR.lat = p.coords.latitude; AR.lon = p.coords.longitude; AR.locName = '今いる場所で表示しています'; AR.skyAt = 0;
+  }, () => { if (AR.lat == null) arHint('現在地がわかりません。位置情報を許可するか、観測地に緯度経度を入れてください'); },
+    { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 });
+  AR.consOK = await loadCons();
+  if (!AR.consOK) toast('星座線のデータを読み込めませんでした。インターネットにつながっているか確かめてください', 5000);
+  AR.skyAt = 0; cancelAnimationFrame(AR.raf); arLoop();
+};
+function closeAR() {
+  AR.on = false; cancelAnimationFrame(AR.raf);
+  window.removeEventListener('deviceorientation', onOri);
+  if (AR.stream) AR.stream.getTracks().forEach(t => t.stop()); AR.stream = null;
+  $('#arVideo').srcObject = null;
+  if (AR.wake) { AR.wake.release().catch(() => { }); AR.wake = null; }
+  $('#ar').hidden = true; document.body.style.overflow = '';
+}
+$('#arClose').onclick = closeAR;
+document.addEventListener('visibilitychange', () => { if (document.hidden && AR.on) closeAR(); });
+
+function buildSky() { // 位置は3秒ごとに計算しなおす（補正込みの向きベクトル）
+  const now = new Date(), lat = AR.lat, lon = AR.lon, c = AR.corr;
+  const pos = o => Astro.position(o, now, lat, lon);
+  const item = (p, extra) => Object.assign({ az: p.az, alt: p.alt, v: vecOf(p.az + c.daz, clamp(p.alt + c.dalt, -90, 90)) }, extra);
+  const sky = { stars: {}, cons: [], bodies: [], named: [] };
+  if (AR.consOK) {
+    for (const hip in HOSHI_STARS) {
+      const s = HOSHI_STARS[hip];
+      sky.stars[hip] = item(pos({ kind: 'fixed', ra: s[0], dec: s[1] }), { mag: s[2] });
+    }
+    for (const cn of HOSHI_CONS) {
+      const seen = new Set(); let v = [0, 0, 0];
+      for (const [a, b] of cn.l) for (const h of [a, b]) if (!seen.has(h) && sky.stars[h]) { seen.add(h); const w = sky.stars[h].v; v = [v[0] + w[0], v[1] + w[1], v[2] + w[2]]; }
+      const n = Math.hypot(v[0], v[1], v[2]);
+      sky.cons.push({ ja: cn.ja, rank: cn.rank, l: cn.l, v: n ? [v[0] / n, v[1] / n, v[2] / n] : null });
+    }
+  }
+  for (const o of CATALOG) {
+    if (o.cat === '太陽系') sky.bodies.push(item(pos(o), { o }));
+    else if (o.cat === '明るい星' || S.selected.includes(o.id)) sky.named.push(item(pos(o), { o }));
+  }
+  for (const o of S.custom) if (S.selected.includes(o.id)) sky.named.push(item(pos(o), { o }));
+  AR.sky = sky; AR.skyAt = Date.now();
+}
+function rotMatrix(a, b, g) { // 端末 → 地上（東・北・上）
+  const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b), cg = Math.cos(g), sg = Math.sin(g);
+  return [
+    [ca * cg - sa * sb * sg, -sa * cb, ca * sg + sa * sb * cg],
+    [sa * cg + ca * sb * sg, ca * cb, sa * sg - ca * sb * cg],
+    [-cb * sg, sb, cb * cg]
+  ];
+}
+function arMatrix() {
+  const o = AR.ori; if (!o || AR.offset == null) return null;
+  const R = rotMatrix((o.a - AR.offset) * D2R, o.b * D2R, o.g * D2R);
+  const th = -((screen.orientation && screen.orientation.angle) || window.orientation || 0) * D2R;
+  const c = Math.cos(th), s = Math.sin(th);
+  return R.map(r => [r[0] * c + r[1] * s, -r[0] * s + r[1] * c, r[2]]);
+}
+function arFocal(W, H) {
+  const v = $('#arVideo'); let vw = v.videoWidth, vh = v.videoHeight;
+  if (!vw || !vh) { vw = W < H ? 3 : 4; vh = W < H ? 4 : 3; }
+  const k = Math.max(W / vw, H / vh), longPx = k * Math.max(vw, vh);
+  return longPx / 2 / Math.tan(CAM_FOV / 2 * D2R) * (S.arScale || 100) / 100;
+}
+function arProject(R, F, cx, cy, w) {
+  const d0 = R[0][0] * w[0] + R[1][0] * w[1] + R[2][0] * w[2];
+  const d1 = R[0][1] * w[0] + R[1][1] * w[1] + R[2][1] * w[2];
+  const d2 = R[0][2] * w[0] + R[1][2] * w[1] + R[2][2] * w[2];
+  if (d2 > -0.02) return { behind: true, d0, d1 };
+  return { x: cx + F * d0 / -d2, y: cy - F * d1 / -d2, d0, d1 };
+}
+function arUnproject(R, F, cx, cy, x, y) {
+  const d = [(x - cx) / F, -(y - cy) / F, -1];
+  const w = [0, 1, 2].map(i => R[i][0] * d[0] + R[i][1] * d[1] + R[i][2] * d[2]);
+  const n = Math.hypot(w[0], w[1], w[2]);
+  return { az: norm360(Math.atan2(w[0], w[1]) * R2D), alt: Math.asin(w[2] / n) * R2D };
+}
+function arLoop() {
+  if (!AR.on) return;
+  AR.raf = requestAnimationFrame(arLoop);
+  if (AR.lat != null && (!AR.sky || Date.now() - AR.skyAt > 3000)) buildSky();
+  drawAR();
+}
+function drawAR() {
+  const c = $('#arCanvas'), W = innerWidth, H = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2);
+  if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+  const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const R = arMatrix(); AR.R = R;
+  if (!R) { $('#arDir').textContent = ''; arHint('センサーの準備中です。iPhoneを少し動かしてください'); return; }
+  if (!AR.sky) { arHint(AR.lat == null ? '現在地を調べています…' : ''); return; }
+  const F = arFocal(W, H), cx = W / 2, cy = H / 2, P = w => arProject(R, F, cx, cy, w);
+  const on = p => p && !p.behind && p.x > -60 && p.x < W + 60 && p.y > -60 && p.y < H + 60;
+  const cd = arUnproject(R, F, cx, cy, cx, cy), ta = norm360(cd.az - AR.corr.daz), tl = cd.alt - AR.corr.dalt;
+  $('#arDir').textContent = `${dirName(ta)}（${ta.toFixed(0)}°）高さ ${tl.toFixed(0)}°`;
+  if (!AR.fix) arHint(AR.acc > 20 ? `方角が${Math.round(AR.acc)}°ほどずれやすい状態です。「ずれを直す」で合わせられます` : AR.locName);
+
+  // 地平線と方角
+  ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(242,200,107,.7)'; ctx.beginPath();
+  let pen = false;
+  for (let az = 0; az <= 360; az += 2) {
+    const p = P(vecOf(az + AR.corr.daz, AR.corr.dalt));
+    if (p.behind) { pen = false; continue; }
+    pen ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); pen = true;
+  }
+  ctx.stroke();
+  for (let k = 0; k < 16; k++) {
+    const az = k * 22.5, p = P(vecOf(az + AR.corr.daz, AR.corr.dalt));
+    if (on(p)) textOut(ctx, DIR16[k], p.x, p.y + 16, k % 2 ? 'rgba(242,200,107,.75)' : '#f2c86b', 'center', k % 2 ? 12 : 16, 700);
+  }
+  const sky = AR.sky;
+  // 星座線
+  if (AR.consOK) {
+    ctx.lineWidth = 1.3;
+    for (const cn of sky.cons) {
+      for (const [a, b] of cn.l) {
+        const sa = sky.stars[a], sb = sky.stars[b]; if (!sa || !sb) continue;
+        const pa = P(sa.v), pb = P(sb.v); if (pa.behind || pb.behind) continue;
+        if (Math.max(pa.x, pb.x) < 0 || Math.min(pa.x, pb.x) > W || Math.max(pa.y, pb.y) < 0 || Math.min(pa.y, pb.y) > H) continue;
+        ctx.strokeStyle = sa.alt < 0 && sb.alt < 0 ? 'rgba(140,175,255,.25)' : 'rgba(150,190,255,.75)';
+        ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+      }
+    }
+    for (const hip in sky.stars) {
+      const s = sky.stars[hip], p = P(s.v); if (!on(p)) continue;
+      ctx.fillStyle = s.alt < 0 ? 'rgba(255,255,255,.35)' : '#fff';
+      ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, 3.4 - 0.55 * s.mag), 0, 7); ctx.fill();
+    }
+    for (const cn of sky.cons) {
+      if (!cn.v) continue; const p = P(cn.v); if (!on(p)) continue;
+      textOut(ctx, cn.ja, p.x, p.y, 'rgba(185,205,255,.95)', 'center', cn.rank === 3 ? 11 : 14, cn.rank === 3 ? 500 : 700);
+    }
+  }
+  // 明るい星・えらんだ天体の名前
+  for (const s of sky.named) {
+    const p = P(s.v); if (!on(p)) continue;
+    const sel = S.selected.includes(s.o.id);
+    if (s.o.kind !== 'fixed' || s.o.cat !== '明るい星' || !AR.consOK) { ctx.fillStyle = s.o.color; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 7); ctx.fill(); }
+    textOut(ctx, s.o.name, p.x + 8, p.y - 8, sel ? '#f2c86b' : 'rgba(236,231,214,.85)', 'left', sel ? 13 : 11, sel ? 700 : 500);
+  }
+  // 太陽・月・惑星
+  for (const s of sky.bodies) {
+    const p = P(s.v); if (!on(p)) continue;
+    const big = s.o.kind === 'sun' || s.o.kind === 'moon';
+    ctx.globalAlpha = s.alt < 0 ? 0.5 : 1;
+    ctx.fillStyle = s.o.color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(p.x, p.y, big ? 10 : 5, 0, 7); ctx.fill(); ctx.stroke();
+    textOut(ctx, s.o.name + (s.alt < 0 ? '（地平線の下）' : ''), p.x + (big ? 14 : 9), p.y, '#ece7d6', 'left', 14, 700);
+    ctx.globalAlpha = 1;
+  }
+  // えらんだ天体が画面の外にあるときの矢印
+  for (const s of [...sky.bodies, ...sky.named]) {
+    if (!S.selected.includes(s.o.id) || s.alt < -1) continue;
+    const p = P(s.v); if (on(p) && p.x > 0 && p.x < W && p.y > 0 && p.y < H) continue;
+    let dx = p.behind ? p.d0 : p.x - cx, dy = p.behind ? -p.d1 : p.y - cy;
+    const n = Math.hypot(dx, dy) || 1; dx /= n; dy /= n;
+    const m = 34, t = Math.min((W / 2 - m) / Math.abs(dx || 1e-6), (H / 2 - m - 40) / Math.abs(dy || 1e-6));
+    const x = cx + dx * t, y = cy + dy * t, ang = Math.atan2(dy, dx);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.fillStyle = s.o.color;
+    ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-6, -8); ctx.lineTo(-6, 8); ctx.closePath(); ctx.fill(); ctx.restore();
+    textOut(ctx, s.o.name, x - dx * 22, y - dy * 22, '#ece7d6', 'center', 12, 700);
+  }
+  // 画面の真ん中
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, 14, 0, 7); ctx.moveTo(cx - 22, cy); ctx.lineTo(cx - 8, cy); ctx.moveTo(cx + 8, cy); ctx.lineTo(cx + 22, cy); ctx.stroke();
+}
+// ずれを直す：本物の月や星をタップ → どれかを選ぶ → そこに合わせる
+$('#arFix').onclick = () => {
+  AR.fix = !AR.fix; $('#arFix').classList.toggle('on', AR.fix); $('#arPanel').hidden = !AR.fix;
+  $('#arScale').value = S.arScale || 100; $('#arCands').innerHTML = '';
+  $('#arMsg').textContent = '空に見えている月や明るい星を、画面の上でタップしてください';
+  arHint('');
+};
+$('#arDone').onclick = () => { AR.fix = false; $('#arFix').classList.remove('on'); $('#arPanel').hidden = true; };
+$('#arReset').onclick = () => { AR.corr = { daz: 0, dalt: 0 }; AR.skyAt = 0; $('#arCands').innerHTML = ''; toast('補正を消しました'); };
+$('#arScale').addEventListener('input', e => { S.arScale = +e.target.value; saveMeta(); });
+$('#arCanvas').addEventListener('click', e => {
+  if (!AR.fix || !AR.R || !AR.sky) return;
+  const W = innerWidth, H = innerHeight, F = arFocal(W, H);
+  const raw = arUnproject(AR.R, F, W / 2, H / 2, e.clientX, e.clientY);
+  const est = { az: raw.az - AR.corr.daz, alt: raw.alt - AR.corr.dalt };
+  const ang = s => { const a = vecOf(s.az, s.alt), b = vecOf(est.az, est.alt); return Math.acos(clamp(a[0] * b[0] + a[1] * b[1] + a[2] * b[2], -1, 1)) * R2D; };
+  const pool = [...AR.sky.bodies.filter(s => s.o.kind !== 'sun' && s.o.id !== 'uranus' && s.o.id !== 'neptune'),
+    ...AR.sky.named.filter(s => s.o.cat === '明るい星')].filter(s => s.alt > -1);
+  const cands = pool.map(s => ({ s, d: ang(s) })).filter(c => c.d < 30).sort((a, b) => a.d - b.d).slice(0, 4);
+  const box = $('#arCands'); box.innerHTML = '';
+  if (!cands.length) { $('#arMsg').textContent = '近くに目印になる天体が見つかりません。月か明るい星の上をタップしてください'; return; }
+  $('#arMsg').textContent = 'タップしたのはどれですか？';
+  cands.forEach(({ s }) => {
+    const b = document.createElement('button'); b.className = 'arBtn'; b.textContent = s.o.name;
+    b.onclick = () => {
+      AR.corr = { daz: wrap180(raw.az - s.az), dalt: raw.alt - s.alt }; AR.skyAt = 0;
+      box.innerHTML = ''; $('#arMsg').textContent = `${s.o.name}に合わせました。ずれが残っていたら、別の星でもう一度タップできます`;
+    };
+    box.appendChild(b);
+  });
+});
+
+/* ---------- タブ ---------- */
+function setTab(t) {
+  S.tab = t; S.pick = null;
+  $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+  ['sky', 'cal', 'sil', 'site'].forEach(k => $('#tab-' + k).hidden = k !== t);
+  if (t !== 'sil') S.trace = false;
+  updateSilUI(); if (t === 'cal') updateCalUI();
+  render(); if (t === 'sky') updateCards();
+}
+$$('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+window.addEventListener('resize', debounce(() => { render(); updateCards(); }, 150));
+
+/* ---------- はじめ ---------- */
+(async function init() {
+  buildRefRows(); setNow();
+  try { await DB.open(); } catch (e) { setMsg('データを保存できない状態です。プライベートブラウズをオフにして開いてください'); return; }
+  const meta = (await DB.get('meta', 'state')) || {};
+  if (meta.selected) S.selected = meta.selected;
+  if (meta.custom) S.custom = meta.custom;
+  if (meta.mode) S.mode = meta.mode;
+  if (meta.grid === false) S.grid = false;
+  if (meta.path === false) S.path = false;
+  if (meta.arScale) S.arScale = meta.arScale;
+  $('#optGrid').checked = S.grid; $('#optPath').checked = S.path;
+  S.sites = (await DB.all('sites')).sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  S.site = S.sites.find(s => s.id === meta.siteId) || S.sites[0] || null;
+  await loadPhoto();
+  setTab(S.site ? 'sky' : 'site');
+  refreshAll();
+})();
+</script>
+</body>
+</html>
